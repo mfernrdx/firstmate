@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 # Ensure a project worktree follows the agent-memory file convention.
-# AGENTS.md is the real project-intrinsic knowledge file; CLAUDE.md is a
-# relative symlink to it for compatibility. Creates a minimal AGENTS.md skeleton
-# when neither file exists, promotes a real CLAUDE.md file when it is the only
-# file present, and refuses to clobber distinct real files or wrong symlinks.
+# AGENTS.md is the real project-intrinsic knowledge file; CLAUDE.md points at
+# it for compatibility, as a relative symlink when this worktree's git will
+# actually materialize one, or as a real regular-file duplicate kept in sync
+# otherwise (see claude_symlink_unsafe() below). Creates a minimal AGENTS.md
+# skeleton when neither file exists, promotes a real CLAUDE.md file when it
+# is the only file present, and refuses to clobber distinct real files or
+# wrong symlinks.
 # Owns the canonical "## Maintaining this file" self-governance wording for
 # project AGENTS.md files, injecting it idempotently into created skeletons,
 # promoted CLAUDE.md files, and any existing AGENTS.md that still lacks it.
 # Refuses a case-variant real memory file such as a lowercase agents.md, whose
 # CLAUDE.md symlink would carry an uppercase literal target that dangles on a
 # case-sensitive filesystem (issue #389).
+# Never converts an already-real, regular CLAUDE.md into a symlink. Git on
+# Windows checkouts commonly runs with core.symlinks=false, where a tracked
+# symlink materializes on checkout as a plain text file containing its link
+# target rather than a real symlink, so any agent that reads CLAUDE.md
+# silently stops seeing project instructions. A project may already have hit
+# and reverted exactly that (see the site-feasibility project's
+# docs/STATUS.md:187 at the time this was written); re-promoting its real
+# CLAUDE.md back into a symlink would reintroduce the same silent breakage,
+# so promotion always copies instead, regardless of whether this worktree's
+# own filesystem happens to support symlinks.
 # This is a worktree utility for crewmates, not a supervision script, so it does
 # not call fm-guard.sh.
 # Usage: fm-ensure-agents-md.sh [repo-or-worktree-dir]
@@ -110,6 +123,63 @@ PY
   return 1
 }
 
+# Decide whether a CLAUDE.md symlink written in $DIR can be trusted to
+# survive as a real symlink for the next checkout of this repository, rather
+# than degrading into a plain-text stub holding the link target (the
+# site-feasibility regression described above). Returns success (0 = "true",
+# unsafe) when a symlink should NOT be created here. Two independent,
+# empirically-checked signals feed this rather than guessing from the path:
+#   - git's own effective core.symlinks for this exact repository. Git
+#     probes filesystem symlink support at clone/init time and records the
+#     result; an explicit "false" is git's own record that it will
+#     materialize a tracked symlink here as a plain text file on checkout,
+#     so it is trusted outright without a second-guessing probe.
+#   - a live filesystem probe: actually create and remove a throwaway
+#     symlink in $DIR. This catches worktrees where git has not recorded
+#     core.symlinks (a bare `git init`, or a git version that leaves it
+#     unset when true) and any other reason symlink creation might fail or
+#     silently degrade to a regular file.
+# Either signal alone is enough to call it unsafe; both must pass for a
+# symlink to be created.
+claude_symlink_unsafe() {
+  local core_symlinks probe
+  core_symlinks=$(git -C "$DIR" config --bool core.symlinks 2>/dev/null || true)
+  if [ "$core_symlinks" = "false" ]; then
+    return 0
+  fi
+  probe=".fm-ensure-agents-md.symlink-probe.$$"
+  rm -f "$probe" 2>/dev/null || true
+  if ! ln -s "probe-target" "$probe" 2>/dev/null; then
+    rm -f "$probe" 2>/dev/null || true
+    return 0
+  fi
+  if [ ! -L "$probe" ]; then
+    rm -f "$probe" 2>/dev/null || true
+    return 0
+  fi
+  rm -f "$probe"
+  return 1
+}
+
+# Point CLAUDE.md at AGENTS.md. AGENTS.md must already hold its final content
+# (including any injected maintenance section) before this runs, so a
+# real-file duplicate starts in sync with it.
+create_claude() {
+  if claude_symlink_unsafe; then
+    cp "$AGENTS" "$CLAUDE"
+  else
+    ln -s "$AGENTS" "$CLAUDE"
+  fi
+}
+
+# Refresh a real (non-symlink) CLAUDE.md so its content matches AGENTS.md
+# again, e.g. after ensure_maintenance_section appended to AGENTS.md. A no-op
+# when CLAUDE.md is a symlink, since it already resolves live.
+sync_claude() {
+  [ -L "$CLAUDE" ] && return 0
+  cp "$AGENTS" "$CLAUDE"
+}
+
 # Refuse a case-variant real memory file (issue #389). On a case-insensitive
 # filesystem an existing lowercase agents.md satisfies every [ -e AGENTS.md ]
 # test below, so the script would emit a CLAUDE.md symlink whose uppercase
@@ -155,16 +225,34 @@ if [ -e "$AGENTS" ]; then
   fi
   if [ ! -e "$CLAUDE" ]; then
     ensure_maintenance_section
-    ln -s "$AGENTS" "$CLAUDE"
-    if [ "$MAINT_INJECTED" -eq 1 ]; then
-      echo "updated: added ## Maintaining this file to AGENTS.md and symlinked CLAUDE.md -> AGENTS.md in $DIR"
+    create_claude
+    if [ -L "$CLAUDE" ]; then
+      if [ "$MAINT_INJECTED" -eq 1 ]; then
+        echo "updated: added ## Maintaining this file to AGENTS.md and symlinked CLAUDE.md -> AGENTS.md in $DIR"
+      else
+        echo "symlinked: CLAUDE.md -> AGENTS.md in $DIR"
+      fi
     else
-      echo "symlinked: CLAUDE.md -> AGENTS.md in $DIR"
+      if [ "$MAINT_INJECTED" -eq 1 ]; then
+        echo "updated: added ## Maintaining this file to AGENTS.md and created a real CLAUDE.md kept in sync with it in $DIR (symlinks unreliable here)"
+      else
+        echo "synced: created a real CLAUDE.md kept in sync with AGENTS.md in $DIR (symlinks unreliable here)"
+      fi
     fi
     exit 0
   fi
   if [ -f "$CLAUDE" ]; then
-    echo "conflict: both AGENTS.md and CLAUDE.md are real files in $DIR; reconcile them manually" >&2
+    if cmp -s "$AGENTS" "$CLAUDE"; then
+      ensure_maintenance_section
+      sync_claude
+      if [ "$MAINT_INJECTED" -eq 1 ]; then
+        echo "updated: added ## Maintaining this file to AGENTS.md and CLAUDE.md in $DIR"
+      else
+        echo "unchanged: AGENTS.md and CLAUDE.md are real, synced files in $DIR"
+      fi
+      exit 0
+    fi
+    echo "conflict: both AGENTS.md and CLAUDE.md are real files in $DIR with different content; reconcile them manually" >&2
     exit 1
   fi
   echo "conflict: CLAUDE.md exists in $DIR but is not a regular file or symlink" >&2
@@ -183,10 +271,14 @@ fi
 
 if [ -e "$CLAUDE" ]; then
   if [ -f "$CLAUDE" ]; then
-    mv "$CLAUDE" "$AGENTS"
+    # A real, regular CLAUDE.md already here is deliberate project content.
+    # Promote it into the AGENTS.md convention by copying, never by moving
+    # it into a symlink target: see the file header for why an already-real
+    # CLAUDE.md is never turned into a symlink here.
+    cp "$CLAUDE" "$AGENTS"
     ensure_maintenance_section
-    ln -s "$AGENTS" "$CLAUDE"
-    echo "promoted: moved CLAUDE.md to AGENTS.md and symlinked CLAUDE.md -> AGENTS.md in $DIR"
+    sync_claude
+    echo "promoted: copied CLAUDE.md content into AGENTS.md and kept CLAUDE.md as a real file in $DIR"
     exit 0
   fi
   echo "conflict: CLAUDE.md exists in $DIR but is not a regular file or symlink" >&2
@@ -194,5 +286,9 @@ if [ -e "$CLAUDE" ]; then
 fi
 
 write_skeleton
-ln -s "$AGENTS" "$CLAUDE"
-echo "created: AGENTS.md and CLAUDE.md -> AGENTS.md in $DIR"
+create_claude
+if [ -L "$CLAUDE" ]; then
+  echo "created: AGENTS.md and CLAUDE.md -> AGENTS.md in $DIR"
+else
+  echo "created: AGENTS.md and a real CLAUDE.md kept in sync with it in $DIR (symlinks unreliable here)"
+fi

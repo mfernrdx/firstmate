@@ -28,8 +28,12 @@ test_created_agents_md_includes_self_governance() {
   pass "fm-ensure-agents-md.sh: created AGENTS.md includes self-governance section"
 }
 
-test_promoted_claude_md_includes_self_governance() {
-  local repo agents count
+test_promoted_claude_md_stays_real_not_symlink() {
+  # Requirement: a repo that already has a real, regular CLAUDE.md must
+  # never be converted into a symlink arrangement by this helper (the
+  # site-feasibility regression). Promotion must copy, not move+symlink,
+  # and the result must stay idempotent on a re-run.
+  local repo agents out count
   repo="$TMP_ROOT/claude-project"
   mkdir -p "$repo"
   cat > "$repo/CLAUDE.md" <<'EOF'
@@ -40,14 +44,24 @@ EOF
   "$ROOT/bin/fm-ensure-agents-md.sh" "$repo" >/dev/null 2>&1 || fail "fm-ensure-agents-md.sh failed for CLAUDE.md promotion"
   agents="$repo/AGENTS.md"
   assert_present "$agents" "AGENTS.md was not created during promotion"
-  [ -L "$repo/CLAUDE.md" ] || fail "CLAUDE.md is not a symlink after promotion"
+  [ ! -L "$repo/CLAUDE.md" ] || fail "CLAUDE.md was converted into a symlink during promotion"
+  [ -f "$repo/CLAUDE.md" ] || fail "CLAUDE.md is no longer a real file after promotion"
   assert_grep "Run tests with \`make test\`." "$agents" \
     "promotion lost existing CLAUDE.md content"
+  assert_grep "Run tests with \`make test\`." "$repo/CLAUDE.md" \
+    "promotion lost CLAUDE.md's own original content"
   count=$(grep -Fc "## Maintaining this file" "$agents")
   [ "$count" -eq 1 ] || fail "promotion wrote $count self-governance sections"
   assert_grep "Keep this file for knowledge useful to almost every future agent session in this project." "$agents" \
     "promoted AGENTS.md missing self-governance wording"
-  pass "fm-ensure-agents-md.sh: promoted CLAUDE.md includes self-governance section"
+  cmp -s "$agents" "$repo/CLAUDE.md" \
+    || fail "promoted AGENTS.md and CLAUDE.md are not kept in sync"
+  # Re-run must stay idempotent: still no symlink, reported unchanged.
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed on idempotent re-run after promotion"
+  assert_contains "$out" "unchanged:" "idempotent re-run after promotion did not report unchanged"
+  [ ! -L "$repo/CLAUDE.md" ] || fail "idempotent re-run turned CLAUDE.md into a symlink"
+  pass "fm-ensure-agents-md.sh: promoted CLAUDE.md stays a real file, never a symlink, and is idempotent"
 }
 
 test_promoted_claude_md_without_trailing_newline_keeps_blank_separator() {
@@ -63,6 +77,7 @@ test_promoted_claude_md_without_trailing_newline_keeps_blank_separator() {
     "newline-less promotion did not append the self-governance section"
   before=$(grep -B1 -Fx '## Maintaining this file' "$agents" | head -n 1)
   [ -z "$before" ] || fail "self-governance heading not preceded by a blank line (got: $before)"
+  [ ! -L "$repo/CLAUDE.md" ] || fail "newline-less promotion converted CLAUDE.md into a symlink"
   pass "fm-ensure-agents-md.sh: newline-less promotion keeps a blank separator line"
 }
 
@@ -184,6 +199,96 @@ test_existing_crlf_agents_md_without_section_preserves_crlf() {
   pass "fm-ensure-agents-md.sh: CRLF injection preserves line endings idempotently"
 }
 
+test_windows_style_repo_promotion_never_symlinks_claude_md() {
+  # The concrete site-feasibility regression: a repo checked out where git
+  # will not materialize symlinks (core.symlinks=false, as git records on a
+  # native Windows checkout) already has a real CLAUDE.md. Running the
+  # helper must not reproduce the reverted bug by turning it into a symlink.
+  local repo agents out
+  repo="$TMP_ROOT/site-feasibility-shaped"
+  mkdir -p "$repo"
+  git init -q "$repo"
+  git -C "$repo" config core.symlinks false
+  cat > "$repo/CLAUDE.md" <<'EOF'
+# site-feasibility agent memory
+
+Build with the Windows toolchain.
+EOF
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed for the site-feasibility-shaped repo"
+  agents="$repo/AGENTS.md"
+  assert_present "$agents" "AGENTS.md was not created for the site-feasibility-shaped repo"
+  [ ! -L "$repo/CLAUDE.md" ] || fail "a CLAUDE.md symlink was created on a core.symlinks=false repo"
+  [ -f "$repo/CLAUDE.md" ] || fail "CLAUDE.md is no longer a real file"
+  assert_grep "Build with the Windows toolchain." "$repo/CLAUDE.md" \
+    "original CLAUDE.md content was lost"
+  assert_grep "Build with the Windows toolchain." "$agents" \
+    "promoted AGENTS.md missing the original CLAUDE.md content"
+  pass "fm-ensure-agents-md.sh: never symlinks CLAUDE.md on a core.symlinks=false (Windows-shaped) repo"
+}
+
+test_symlinks_unreliable_creates_real_synced_claude_md() {
+  # No CLAUDE.md yet, but this repo's git will not materialize symlinks:
+  # the helper must still succeed and produce a usable, real CLAUDE.md
+  # instead of a symlink that would dangle as a text stub on checkout.
+  local repo agents out
+  repo="$TMP_ROOT/unsafe-symlink-fresh"
+  mkdir -p "$repo"
+  git init -q "$repo"
+  git -C "$repo" config core.symlinks false
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed for a core.symlinks=false repo"
+  agents="$repo/AGENTS.md"
+  assert_present "$agents" "AGENTS.md was not created for a core.symlinks=false repo"
+  assert_present "$repo/CLAUDE.md" "CLAUDE.md was not created for a core.symlinks=false repo"
+  [ ! -L "$repo/CLAUDE.md" ] || fail "a CLAUDE.md symlink was created on a core.symlinks=false repo"
+  cmp -s "$agents" "$repo/CLAUDE.md" \
+    || fail "real CLAUDE.md is not kept in sync with AGENTS.md"
+  assert_grep "## Maintaining this file" "$repo/CLAUDE.md" \
+    "real CLAUDE.md missing the self-governance section"
+  # Re-run must stay idempotent.
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed on idempotent re-run for a core.symlinks=false repo"
+  assert_contains "$out" "unchanged:" "idempotent re-run on a core.symlinks=false repo did not report unchanged"
+  pass "fm-ensure-agents-md.sh: symlinks-unreliable repo gets a real, synced CLAUDE.md and stays idempotent"
+}
+
+test_symlinks_unreliable_agents_only_creates_real_claude_md() {
+  # AGENTS.md already exists (no CLAUDE.md yet) on a repo whose git will not
+  # materialize symlinks: the CLAUDE.md this helper adds must be real too.
+  local repo agents out
+  repo="$TMP_ROOT/unsafe-symlink-agents-only"
+  mkdir -p "$repo"
+  git init -q "$repo"
+  git -C "$repo" config core.symlinks false
+  printf '# Existing agent memory\n\nDeploy with the release script.\n' > "$repo/AGENTS.md"
+  agents="$repo/AGENTS.md"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed adding CLAUDE.md on a core.symlinks=false repo"
+  [ ! -L "$repo/CLAUDE.md" ] || fail "a CLAUDE.md symlink was created on a core.symlinks=false repo"
+  cmp -s "$agents" "$repo/CLAUDE.md" \
+    || fail "real CLAUDE.md is not kept in sync with existing AGENTS.md"
+  pass "fm-ensure-agents-md.sh: adds a real, synced CLAUDE.md when only AGENTS.md exists and symlinks are unreliable"
+}
+
+test_both_real_files_with_different_content_still_conflicts() {
+  # A genuine conflict - two real files that were never synced by this
+  # helper - must still be refused rather than silently merged.
+  local repo out rc
+  repo="$TMP_ROOT/genuine-conflict"
+  mkdir -p "$repo"
+  printf '# AGENTS content\n' > "$repo/AGENTS.md"
+  printf '# different CLAUDE content\n' > "$repo/CLAUDE.md"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1)
+  rc=$?
+  [ "$rc" -ne 0 ] || fail "expected a non-zero exit for distinct real AGENTS.md and CLAUDE.md"
+  assert_contains "$out" "conflict:" "distinct real files did not report a conflict"
+  assert_present "$repo/AGENTS.md" "AGENTS.md was disturbed by the conflict check"
+  assert_present "$repo/CLAUDE.md" "CLAUDE.md was disturbed by the conflict check"
+  assert_grep "different CLAUDE content" "$repo/CLAUDE.md" "CLAUDE.md content was overwritten"
+  pass "fm-ensure-agents-md.sh: refuses two real files with different content"
+}
+
 test_lowercase_agents_md_refuses_case_fragile_symlink() {
   local repo out rc
   repo="$TMP_ROOT/lowercase-project"
@@ -201,11 +306,15 @@ test_lowercase_agents_md_refuses_case_fragile_symlink() {
 }
 
 test_created_agents_md_includes_self_governance
-test_promoted_claude_md_includes_self_governance
+test_promoted_claude_md_stays_real_not_symlink
 test_promoted_claude_md_without_trailing_newline_keeps_blank_separator
 test_existing_agents_md_with_symlink_gains_self_governance
 test_existing_agents_md_without_claude_gains_section_and_symlink
 test_existing_agents_md_with_section_reports_unchanged
 test_existing_crlf_agents_md_with_section_stays_unchanged
 test_existing_crlf_agents_md_without_section_preserves_crlf
+test_windows_style_repo_promotion_never_symlinks_claude_md
+test_symlinks_unreliable_creates_real_synced_claude_md
+test_symlinks_unreliable_agents_only_creates_real_claude_md
+test_both_real_files_with_different_content_still_conflicts
 test_lowercase_agents_md_refuses_case_fragile_symlink
