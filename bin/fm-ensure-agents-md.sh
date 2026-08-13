@@ -130,28 +130,83 @@ clear_probe() {
   trap - EXIT INT TERM
 }
 
+# Detect whether $DIR's working tree sits on WSL's DrvFs, the bind that
+# exposes a native Windows drive (e.g. C:\) into Linux, normally mounted
+# under /mnt/<letter> - the captain's own production checkouts live there.
+# `ln -s` succeeds on DrvFs and a brand-new repo has no core.symlinks
+# recorded yet, so neither of claude_symlink_unsafe()'s other two signals
+# sees the danger, yet a symlink written from here still lands on the real
+# Windows filesystem, where native Windows git commonly defaults to
+# core.symlinks=false and materializes a tracked symlink as the same dead
+# text stub this whole change exists to prevent. Read the real mount table
+# instead of matching the path string, so an unrelated /mnt/<x> mount (a
+# genuinely mounted ext4 image, say) is not penalized, and a DrvFs mount
+# elsewhere is still caught. DrvFs surfaces as fstype "drvfs" directly on
+# older WSL, or as fstype "9p" carrying "aname=drvfs" in its mount options on
+# current WSL2 (confirmed against a live WSL2 host: `C:\ on /mnt/c type 9p
+# (...,aname=drvfs;path=C:\...)`); a same-fstype "9p" mount without that
+# option, such as WSL's own driver mount, is not DrvFs and is left alone.
+# Reads through $FM_PROC_ROOT_OVERRIDE (defaulting to /proc, the same
+# fake-/proc override other scripts in this repo already use for tests) so a
+# colocated test can point it at a fixture mount table instead of the real
+# machine's.
+on_drvfs() {
+  local mounts=${FM_PROC_ROOT_OVERRIDE:-/proc}/mounts
+  [ -r "$mounts" ] || return 1
+  local best_point='' best_type='' best_opts='' point type opts rest
+  while read -r _ point type opts rest; do
+    case "$DIR" in
+      "$point"|"$point"/*)
+        if [ "${#point}" -ge "${#best_point}" ]; then
+          best_point=$point
+          best_type=$type
+          best_opts=$opts
+        fi
+        ;;
+    esac
+  done < "$mounts"
+  case "$best_type" in
+    drvfs) return 0 ;;
+    9p)
+      case "$best_opts" in
+        *aname=drvfs*) return 0 ;;
+      esac
+      ;;
+  esac
+  return 1
+}
+
 # Decide whether a CLAUDE.md symlink written in $DIR can be trusted to
 # survive as a real symlink for the next checkout of this repository, rather
 # than degrading into a plain-text stub holding the link target (the
 # site-feasibility regression described above). Returns success (0 = "true",
-# unsafe) when a symlink should NOT be created here. Two independent,
+# unsafe) when a symlink should NOT be created here. Three independent,
 # empirically-checked signals feed this rather than guessing from the path:
 #   - git's own effective core.symlinks for this exact repository. Git
 #     probes filesystem symlink support at clone/init time and records the
 #     result; an explicit "false" is git's own record that it will
 #     materialize a tracked symlink here as a plain text file on checkout,
 #     so it is trusted outright without a second-guessing probe.
+#   - on_drvfs() above: a fresh repo has no core.symlinks recorded yet, and
+#     DrvFs itself lets Linux create real symlink objects, so this signal is
+#     the only thing that catches a brand-new repo on the captain's own
+#     Windows-backed checkouts before the ln -s probe below would otherwise
+#     wave it through.
 #   - a live filesystem probe: actually create and remove a throwaway
 #     symlink in $DIR. This catches worktrees where git has not recorded
-#     core.symlinks (a bare `git init`, or a git version that leaves it
-#     unset when true) and any other reason symlink creation might fail or
-#     silently degrade to a regular file.
-# Either signal alone is enough to call it unsafe; both must pass for a
+#     core.symlinks and this is not a DrvFs mount (a bare `git init` on a
+#     plain filesystem with symlinks disabled some other way) and any other
+#     reason symlink creation might fail or silently degrade to a regular
+#     file.
+# Any one signal alone is enough to call it unsafe; all three must pass for a
 # symlink to be created.
 claude_symlink_unsafe() {
   local core_symlinks probe
   core_symlinks=$(git -C "$DIR" config --bool core.symlinks 2>/dev/null || true)
   if [ "$core_symlinks" = "false" ]; then
+    return 0
+  fi
+  if on_drvfs; then
     return 0
   fi
   probe="$DIR/.fm-ensure-agents-md.symlink-probe.$$"

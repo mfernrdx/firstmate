@@ -271,6 +271,55 @@ test_symlinks_unreliable_agents_only_creates_real_claude_md() {
   pass "fm-ensure-agents-md.sh: adds a real, synced CLAUDE.md when only AGENTS.md exists and symlinks are unreliable"
 }
 
+test_fresh_repo_on_drvfs_never_symlinks_claude_md() {
+  # The captain's own production checkouts live on WSL's DrvFs (a native
+  # Windows drive bind-mounted under /mnt/<letter>). A brand-new repo there
+  # has no core.symlinks recorded yet, and `ln -s` succeeds on DrvFs, so
+  # neither the core.symlinks check nor the live ln -s probe alone catches
+  # it - only reading the real mount table does. A fake /proc/mounts (via
+  # FM_PROC_ROOT_OVERRIDE) simulates the exact mount line observed on a live
+  # WSL2 host so this is testable without one.
+  local repo real_repo proc_root out
+  repo="$TMP_ROOT/drvfs-fresh-project"
+  mkdir -p "$repo"
+  real_repo=$(cd "$repo" && pwd -P)
+  git init -q "$repo"
+  proc_root="$TMP_ROOT/fake-proc-drvfs"
+  mkdir -p "$proc_root"
+  printf 'drvfs-device %s 9p rw,noatime,aname=drvfs,symlinkroot=/mnt/ 0 0\n' "$real_repo" > "$proc_root/mounts"
+  out=$(FM_PROC_ROOT_OVERRIDE="$proc_root" "$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed for a fresh repo on a simulated DrvFs mount"
+  [ ! -L "$repo/CLAUDE.md" ] || fail "a CLAUDE.md symlink was created on a simulated DrvFs mount"
+  assert_present "$repo/AGENTS.md" "AGENTS.md was not created on a simulated DrvFs mount"
+  assert_present "$repo/CLAUDE.md" "CLAUDE.md was not created on a simulated DrvFs mount"
+  cmp -s "$repo/AGENTS.md" "$repo/CLAUDE.md" \
+    || fail "real CLAUDE.md is not kept in sync with AGENTS.md on a simulated DrvFs mount"
+  # Prove the DrvFs signal - not an incidental local filesystem limit - is
+  # what blocked the symlink: a real ln -s in this same directory succeeds.
+  ln -s "AGENTS.md" "$repo/.drvfs-probe-sanity-check" \
+    || fail "sanity check: this test's own filesystem does not actually support ln -s"
+  [ -L "$repo/.drvfs-probe-sanity-check" ] || fail "sanity check: ln -s did not create a real symlink here"
+  rm -f "$repo/.drvfs-probe-sanity-check"
+  pass "fm-ensure-agents-md.sh: never symlinks CLAUDE.md for a fresh repo on a simulated DrvFs (Windows) mount"
+}
+
+test_non_drvfs_mnt_mount_still_symlinks_claude_md() {
+  # A /mnt/<x> mount that is NOT DrvFs (an ordinary ext4 filesystem, say)
+  # must not be penalized by path-prefix guesswork - only the real fstype
+  # and options decide.
+  local repo real_repo proc_root out
+  repo="$TMP_ROOT/plain-mnt-project"
+  mkdir -p "$repo"
+  real_repo=$(cd "$repo" && pwd -P)
+  proc_root="$TMP_ROOT/fake-proc-plain-mnt"
+  mkdir -p "$proc_root"
+  printf '/dev/sdz1 %s ext4 rw,relatime 0 0\n' "$real_repo" > "$proc_root/mounts"
+  out=$(FM_PROC_ROOT_OVERRIDE="$proc_root" "$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed for a plain ext4 mount under /mnt"
+  [ -L "$repo/CLAUDE.md" ] || fail "a real ext4 mount under /mnt was mistaken for DrvFs"
+  pass "fm-ensure-agents-md.sh: a non-DrvFs /mnt mount still gets a real CLAUDE.md symlink"
+}
+
 test_both_real_files_with_different_content_still_conflicts() {
   # A genuine conflict - two real files that were never synced by this
   # helper - must still be refused rather than silently merged.
@@ -316,5 +365,7 @@ test_existing_crlf_agents_md_without_section_preserves_crlf
 test_windows_style_repo_promotion_never_symlinks_claude_md
 test_symlinks_unreliable_creates_real_synced_claude_md
 test_symlinks_unreliable_agents_only_creates_real_claude_md
+test_fresh_repo_on_drvfs_never_symlinks_claude_md
+test_non_drvfs_mnt_mount_still_symlinks_claude_md
 test_both_real_files_with_different_content_still_conflicts
 test_lowercase_agents_md_refuses_case_fragile_symlink
