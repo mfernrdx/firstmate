@@ -123,6 +123,13 @@ PY
   return 1
 }
 
+# Remove the symlink probe and drop the cleanup traps installed for it, so the
+# rest of the run is back to the script's default signal handling.
+clear_probe() {
+  rm -f "$1" 2>/dev/null || true
+  trap - EXIT INT TERM
+}
+
 # Decide whether a CLAUDE.md symlink written in $DIR can be trusted to
 # survive as a real symlink for the next checkout of this repository, rather
 # than degrading into a plain-text stub holding the link target (the
@@ -147,17 +154,20 @@ claude_symlink_unsafe() {
   if [ "$core_symlinks" = "false" ]; then
     return 0
   fi
-  probe=".fm-ensure-agents-md.symlink-probe.$$"
+  probe="$DIR/.fm-ensure-agents-md.symlink-probe.$$"
   rm -f "$probe" 2>/dev/null || true
+  trap 'rm -f "$probe" 2>/dev/null || true' EXIT
+  trap 'rm -f "$probe" 2>/dev/null || true; trap - INT; kill -INT $$' INT
+  trap 'rm -f "$probe" 2>/dev/null || true; trap - TERM; kill -TERM $$' TERM
   if ! ln -s "probe-target" "$probe" 2>/dev/null; then
-    rm -f "$probe" 2>/dev/null || true
+    clear_probe "$probe"
     return 0
   fi
   if [ ! -L "$probe" ]; then
-    rm -f "$probe" 2>/dev/null || true
+    clear_probe "$probe"
     return 0
   fi
-  rm -f "$probe"
+  clear_probe "$probe"
   return 1
 }
 
