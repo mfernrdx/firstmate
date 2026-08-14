@@ -293,6 +293,21 @@ claude_matches_agents_synced() {
   emit_synced_claude_content | cmp -s - "$CLAUDE"
 }
 
+# Seed AGENTS.md from an existing real CLAUDE.md during promotion, dropping a
+# trailing sync-marker line when CLAUDE.md carries one. A marked CLAUDE.md can
+# reach the promotion path whenever AGENTS.md disappears out of band (a stray
+# deletion, a partial checkout, a reverted commit) while its marked mirror
+# survives; copying the marker verbatim would bake this helper's own machine
+# line into the real memory file every agent session reads, and the next
+# sync_claude() would then append a second one.
+seed_agents_from_claude() {
+  if claude_has_marker; then
+    sed '$d' "$CLAUDE" > "$AGENTS"
+  else
+    cp "$CLAUDE" "$AGENTS"
+  fi
+}
+
 # Point CLAUDE.md at AGENTS.md. AGENTS.md must already hold its final content
 # (including any injected maintenance section) before this runs, so a
 # real-file duplicate starts in sync with it.
@@ -429,7 +444,7 @@ if [ -e "$CLAUDE" ]; then
     # Promote it into the AGENTS.md convention by copying, never by moving
     # it into a symlink target: see the file header for why an already-real
     # CLAUDE.md is never turned into a symlink here.
-    cp "$CLAUDE" "$AGENTS"
+    seed_agents_from_claude
     ensure_maintenance_section
     sync_claude
     echo "promoted: copied CLAUDE.md content into AGENTS.md; CLAUDE.md is now a managed mirror of AGENTS.md in $DIR - edit AGENTS.md from now on, not CLAUDE.md"

@@ -97,6 +97,41 @@ test_promoted_claude_md_without_trailing_newline_keeps_blank_separator() {
   pass "fm-ensure-agents-md.sh: newline-less promotion keeps a blank separator line"
 }
 
+test_promotion_of_marked_claude_md_strips_the_marker_from_agents_md() {
+  # A marked CLAUDE.md can reach the promotion path when AGENTS.md vanishes
+  # out of band (stray deletion, partial checkout, reverted commit) while its
+  # mirror survives. Promotion must not copy this helper's own marker line
+  # into AGENTS.md - that file is what every agent session reads - and must
+  # still leave CLAUDE.md a normal marked duplicate carrying exactly one.
+  local repo agents claude out count
+  repo="$TMP_ROOT/orphaned-marked-mirror-project"
+  mkdir -p "$repo"
+  git init -q "$repo"
+  git -C "$repo" config core.symlinks false
+  agents="$repo/AGENTS.md"
+  claude="$repo/CLAUDE.md"
+  printf '# Existing agent memory\n\nRun tests with make test.\n' > "$agents"
+  "$ROOT/bin/fm-ensure-agents-md.sh" "$repo" >/dev/null 2>&1 \
+    || fail "fm-ensure-agents-md.sh failed creating the initial marked duplicate"
+  [ ! -L "$claude" ] || fail "expected a real duplicate, not a symlink, on a core.symlinks=false repo"
+  assert_grep "fm-ensure-agents-md" "$claude" "initial duplicate is missing its sync marker"
+  rm -f "$agents"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed promoting an orphaned marked CLAUDE.md"
+  assert_contains "$out" "promoted:" "orphaned marked mirror was not promoted"
+  assert_present "$agents" "promotion did not recreate AGENTS.md"
+  grep -Fq "fm-ensure-agents-md" "$agents" \
+    && fail "promotion copied the sync marker into AGENTS.md"
+  assert_grep "Run tests with make test." "$agents" "promotion lost the original memory content"
+  count=$(grep -Fc "fm-ensure-agents-md" "$claude")
+  [ "$count" -eq 1 ] || fail "promoted CLAUDE.md carries $count sync markers"
+  assert_synced_duplicate "$agents" "$claude" "promoted orphaned mirror is not a synced duplicate"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed on the re-run after orphan promotion"
+  assert_contains "$out" "unchanged:" "re-run after orphan promotion did not report unchanged"
+  pass "fm-ensure-agents-md.sh: promoting an orphaned marked mirror leaves AGENTS.md marker-free"
+}
+
 test_existing_agents_md_with_symlink_gains_self_governance() {
   local repo agents out count
   repo="$TMP_ROOT/existing-symlinked-project"
@@ -614,6 +649,7 @@ test_lowercase_agents_md_refuses_case_fragile_symlink() {
 test_created_agents_md_includes_self_governance
 test_promoted_claude_md_stays_real_not_symlink
 test_promoted_claude_md_without_trailing_newline_keeps_blank_separator
+test_promotion_of_marked_claude_md_strips_the_marker_from_agents_md
 test_existing_agents_md_with_symlink_gains_self_governance
 test_existing_agents_md_without_claude_gains_section_and_symlink
 test_existing_agents_md_with_section_reports_unchanged
