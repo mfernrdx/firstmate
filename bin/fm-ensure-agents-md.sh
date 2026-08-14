@@ -249,13 +249,29 @@ claude_symlink_unsafe() {
   return 1
 }
 
+# Emit the exact bytes a real (non-symlink) CLAUDE.md duplicate must hold:
+# AGENTS.md's current content plus the trailing sync marker on a line of its
+# own. AGENTS.md need not end with a newline (a hand-trimmed or promoted
+# newline-less memory file is a normal input), so start the marker's line
+# when the content does not already end one - otherwise the marker would be
+# glued onto the last content line and claude_has_marker() could never
+# recognize the file again. Both the writer and the in-sync comparison go
+# through here so they cannot drift apart.
+emit_synced_claude_content() {
+  detect_agents_eol
+  cat "$AGENTS"
+  if [ -s "$AGENTS" ] && [ -n "$(tail -c 1 "$AGENTS")" ]; then
+    printf '%s' "$AGENTS_EOL"
+  fi
+  printf '%s%s' "$CLAUDE_SYNC_MARKER" "$AGENTS_EOL"
+}
+
 # Write a real (non-symlink) CLAUDE.md as AGENTS.md's current content plus
 # the trailing sync marker, so a later run can tell this file apart from a
 # hand-authored one. AGENTS.md must already hold its final content
 # (including any injected maintenance section) before this runs.
 write_claude_duplicate() {
-  detect_agents_eol
-  { cat "$AGENTS"; printf '%s%s' "$CLAUDE_SYNC_MARKER" "$AGENTS_EOL"; } > "$CLAUDE"
+  emit_synced_claude_content > "$CLAUDE"
 }
 
 # True when CLAUDE.md's own last line is exactly the sync marker, i.e. this
@@ -274,8 +290,7 @@ claude_has_marker() {
 # True when CLAUDE.md's content is exactly AGENTS.md's content plus the
 # trailing sync marker - the steady state right after write_claude_duplicate.
 claude_matches_agents_synced() {
-  detect_agents_eol
-  { cat "$AGENTS"; printf '%s%s' "$CLAUDE_SYNC_MARKER" "$AGENTS_EOL"; } | cmp -s - "$CLAUDE"
+  emit_synced_claude_content | cmp -s - "$CLAUDE"
 }
 
 # Point CLAUDE.md at AGENTS.md. AGENTS.md must already hold its final content

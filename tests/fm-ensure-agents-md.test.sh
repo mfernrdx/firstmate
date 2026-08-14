@@ -485,6 +485,53 @@ test_marked_duplicate_survives_crlf_checkout_normalization() {
   pass "fm-ensure-agents-md.sh: a marked duplicate survives a CRLF checkout normalization"
 }
 
+test_newline_less_agents_md_duplicate_keeps_marker_on_its_own_line() {
+  # A memory file with no final newline is a normal input (a hand-trimmed
+  # file, or a promoted newline-less CLAUDE.md). The marker must still land
+  # on a line of its own, or it is glued onto the last content line, is
+  # never recognized as this helper's own again, and the first AGENTS.md-only
+  # edit hard-refuses instead of resyncing.
+  local repo agents claude out last
+  repo="$TMP_ROOT/newline-less-duplicate-project"
+  mkdir -p "$repo"
+  git init -q "$repo"
+  git -C "$repo" config core.symlinks false
+  agents="$repo/AGENTS.md"
+  claude="$repo/CLAUDE.md"
+  {
+    printf '%s\n' \
+      '# Existing agent memory' \
+      '' \
+      '## Maintaining this file' \
+      '' \
+      'Keep this file for knowledge useful to almost every future agent session in this project.' \
+      'Do not repeat what the codebase already shows; point to the authoritative file or command instead.' \
+      'Prefer rewriting or pruning existing entries over appending new ones.'
+    printf '%s' 'When updating this file, preserve this bar for all agents and keep entries concise.'
+  } > "$agents"
+  "$ROOT/bin/fm-ensure-agents-md.sh" "$repo" >/dev/null 2>&1 \
+    || fail "fm-ensure-agents-md.sh failed creating a duplicate for a newline-less AGENTS.md"
+  [ ! -L "$claude" ] || fail "expected a real duplicate, not a symlink, on a core.symlinks=false repo"
+  last=$(tail -n 1 "$claude")
+  case "$last" in
+    '<!-- fm-ensure-agents-md:'*) ;;
+    *) fail "sync marker was glued onto a content line (last line: $last)" ;;
+  esac
+  assert_grep "preserve this bar for all agents and keep entries concise." "$claude" \
+    "newline-less duplicate lost or mangled AGENTS.md's last content line"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh refused a freshly written newline-less duplicate"
+  assert_contains "$out" "unchanged:" "a synced newline-less duplicate was not recognized as in sync"
+  printf '\n- New durable note after the newline-less sync.\n' >> "$agents"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh refused a newline-less duplicate's drift instead of resyncing"
+  assert_contains "$out" "synced:" "drifted newline-less duplicate was not reported as resynced"
+  assert_grep "New durable note after the newline-less sync." "$claude" \
+    "resync did not propagate the AGENTS.md-only edit into CLAUDE.md"
+  assert_synced_duplicate "$agents" "$claude" "resynced newline-less duplicate is not a synced duplicate"
+  pass "fm-ensure-agents-md.sh: a newline-less AGENTS.md still gets the marker on its own line and resyncs"
+}
+
 test_unmarked_claude_still_refuses_on_mismatch() {
   # A hand-authored CLAUDE.md this helper never created has no marker, so a
   # content mismatch must still fail safe as a genuine conflict rather than
@@ -569,6 +616,7 @@ test_both_real_files_with_different_content_still_conflicts
 test_marked_duplicate_resyncs_after_agents_only_edit
 test_crlf_marked_duplicate_stays_synced_and_resyncs
 test_marked_duplicate_survives_crlf_checkout_normalization
+test_newline_less_agents_md_duplicate_keeps_marker_on_its_own_line
 test_unmarked_claude_still_refuses_on_mismatch
 test_legacy_unmarked_duplicate_upgrades_to_marker
 test_lowercase_agents_md_refuses_case_fragile_symlink
