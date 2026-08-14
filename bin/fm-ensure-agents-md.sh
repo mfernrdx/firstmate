@@ -58,6 +58,20 @@ CLAUDE=CLAUDE.md
 # always keeps today's hard-conflict-on-mismatch behavior.
 CLAUDE_SYNC_MARKER='<!-- fm-ensure-agents-md: this CLAUDE.md is a synced duplicate of AGENTS.md, written because symlinks are not reliable here; edit AGENTS.md instead, then re-run fm-ensure-agents-md.sh -->'
 
+# Detect AGENTS.md's own line-ending convention into AGENTS_EOL, so every line
+# this script writes into or alongside that content (the maintenance section,
+# the CLAUDE.md sync marker) matches it instead of forcing LF. A CRLF worktree
+# is the normal case on the Windows checkouts this helper's real-duplicate mode
+# exists for, and a marker written with the wrong ending is unrecognizable
+# after a core.autocrlf checkout normalizes the file.
+AGENTS_EOL=$'\n'
+detect_agents_eol() {
+  AGENTS_EOL=$'\n'
+  if [ -f "$AGENTS" ] && LC_ALL=C grep -q $'\r$' "$AGENTS"; then
+    AGENTS_EOL=$'\r\n'
+  fi
+}
+
 write_maintenance_section() {
   cat <<'EOF'
 ## Maintaining this file
@@ -86,10 +100,9 @@ ensure_maintenance_section() {
     grep -Fqx $'## Maintaining this file\r' "$AGENTS"; then
     return 0
   fi
-  local eol=$'\n' sep=''
-  if LC_ALL=C grep -q $'\r$' "$AGENTS"; then
-    eol=$'\r\n'
-  fi
+  local sep=''
+  detect_agents_eol
+  local eol=$AGENTS_EOL
   if [ -s "$AGENTS" ]; then
     if [ -n "$(tail -c 1 "$AGENTS")" ]; then
       sep="${eol}${eol}"
@@ -241,22 +254,28 @@ claude_symlink_unsafe() {
 # hand-authored one. AGENTS.md must already hold its final content
 # (including any injected maintenance section) before this runs.
 write_claude_duplicate() {
-  { cat "$AGENTS"; printf '%s\n' "$CLAUDE_SYNC_MARKER"; } > "$CLAUDE"
+  detect_agents_eol
+  { cat "$AGENTS"; printf '%s%s' "$CLAUDE_SYNC_MARKER" "$AGENTS_EOL"; } > "$CLAUDE"
 }
 
 # True when CLAUDE.md's own last line is exactly the sync marker, i.e. this
 # file is a duplicate this helper wrote rather than something hand-authored.
 # Checked against the file's real, current content - never assumed from
-# knowing this helper created it in some earlier run.
+# knowing this helper created it in some earlier run. A trailing CR is
+# ignored, so a marked duplicate stays recognizable after a CRLF checkout
+# rewrites the whole file's line endings.
 claude_has_marker() {
   [ -f "$CLAUDE" ] || return 1
-  tail -n 1 "$CLAUDE" 2>/dev/null | grep -Fqx "$CLAUDE_SYNC_MARKER"
+  local last
+  last=$(tail -n 1 "$CLAUDE" 2>/dev/null || true)
+  [ "${last%$'\r'}" = "$CLAUDE_SYNC_MARKER" ]
 }
 
 # True when CLAUDE.md's content is exactly AGENTS.md's content plus the
 # trailing sync marker - the steady state right after write_claude_duplicate.
 claude_matches_agents_synced() {
-  { cat "$AGENTS"; printf '%s\n' "$CLAUDE_SYNC_MARKER"; } | cmp -s - "$CLAUDE"
+  detect_agents_eol
+  { cat "$AGENTS"; printf '%s%s' "$CLAUDE_SYNC_MARKER" "$AGENTS_EOL"; } | cmp -s - "$CLAUDE"
 }
 
 # Point CLAUDE.md at AGENTS.md. AGENTS.md must already hold its final content

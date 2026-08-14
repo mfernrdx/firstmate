@@ -391,6 +391,100 @@ test_marked_duplicate_resyncs_after_agents_only_edit() {
   pass "fm-ensure-agents-md.sh: a marked duplicate resyncs instead of conflicting after an AGENTS.md-only edit"
 }
 
+# Assert every line of <file> ends with CR, i.e. the file has no mixed line
+# endings after this script wrote to it.
+assert_all_crlf() {
+  local file=$1 msg=$2 total crlf
+  total=$(wc -l < "$file")
+  crlf=$(LC_ALL=C grep -a -c $'\r$' "$file" || true)
+  [ "$crlf" -eq "$total" ] \
+    || fail "$msg ($crlf of $total lines end with CR)"
+}
+
+# Rewrite <file> in place with CRLF line endings, the way a native Windows
+# git checkout with the installer-default core.autocrlf=true materializes a
+# tracked text file.
+crlf_normalize() {
+  LC_ALL=C sed -e 's/\r*$/\r/' "$1" > "$1.crlf"
+  mv "$1.crlf" "$1"
+}
+
+test_crlf_marked_duplicate_stays_synced_and_resyncs() {
+  # A real CLAUDE.md duplicate written for a CRLF worktree - the normal case
+  # on the Windows checkouts this mode exists for - must carry a CRLF marker
+  # line, be recognized as already in sync on a re-run, and still resync
+  # rather than conflict after a CRLF AGENTS.md-only edit.
+  local repo agents claude out
+  repo="$TMP_ROOT/crlf-marked-duplicate-project"
+  mkdir -p "$repo"
+  git init -q "$repo"
+  git -C "$repo" config core.symlinks false
+  agents="$repo/AGENTS.md"
+  claude="$repo/CLAUDE.md"
+  printf '%s\r\n' \
+    '# Existing agent memory' \
+    '' \
+    'Build with the Windows toolchain.' \
+    '' \
+    '## Maintaining this file' \
+    '' \
+    'Keep this file for knowledge useful to almost every future agent session in this project.' \
+    'Do not repeat what the codebase already shows; point to the authoritative file or command instead.' \
+    'Prefer rewriting or pruning existing entries over appending new ones.' \
+    'When updating this file, preserve this bar for all agents and keep entries concise.' > "$agents"
+  "$ROOT/bin/fm-ensure-agents-md.sh" "$repo" >/dev/null 2>&1 \
+    || fail "fm-ensure-agents-md.sh failed creating a duplicate for a CRLF AGENTS.md"
+  [ ! -L "$claude" ] || fail "expected a real duplicate, not a symlink, on a core.symlinks=false repo"
+  assert_synced_duplicate "$agents" "$claude" "CRLF duplicate is not a synced duplicate"
+  assert_all_crlf "$claude" "CRLF duplicate has mixed line endings"
+  cp "$claude" "$repo/.after-create"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh refused a freshly written CRLF duplicate"
+  assert_contains "$out" "unchanged:" "a synced CRLF duplicate was not recognized as in sync"
+  cmp -s "$repo/.after-create" "$claude" \
+    || fail "idempotent re-run modified the CRLF duplicate"
+  printf '%s\r\n' '' '- New durable CRLF note.' >> "$agents"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh refused a CRLF marked duplicate's drift instead of resyncing"
+  assert_contains "$out" "synced:" "drifted CRLF duplicate was not reported as resynced"
+  assert_grep "New durable CRLF note." "$claude" \
+    "CRLF resync did not propagate the AGENTS.md-only edit into CLAUDE.md"
+  assert_all_crlf "$claude" "resynced CRLF duplicate has mixed line endings"
+  pass "fm-ensure-agents-md.sh: a CRLF marked duplicate stays synced and resyncs after a CRLF AGENTS.md edit"
+}
+
+test_marked_duplicate_survives_crlf_checkout_normalization() {
+  # Regression: an LF marked duplicate committed on one machine and checked
+  # out by a git that normalizes to CRLF (Windows installer default
+  # core.autocrlf=true) comes back with a CR on the marker line too. That
+  # must still read as this helper's own duplicate and resync, not hard-exit
+  # as an unreconcilable conflict.
+  local repo agents claude out
+  repo="$TMP_ROOT/crlf-checkout-project"
+  mkdir -p "$repo"
+  git init -q "$repo"
+  git -C "$repo" config core.symlinks false
+  agents="$repo/AGENTS.md"
+  claude="$repo/CLAUDE.md"
+  "$ROOT/bin/fm-ensure-agents-md.sh" "$repo" >/dev/null 2>&1 \
+    || fail "fm-ensure-agents-md.sh failed creating the initial LF marked duplicate"
+  crlf_normalize "$agents"
+  crlf_normalize "$claude"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh refused a CRLF-normalized marked duplicate instead of resyncing"
+  assert_grep "fm-ensure-agents-md: this CLAUDE.md is a synced duplicate" "$claude" \
+    "CRLF-normalized duplicate lost its sync marker"
+  assert_all_crlf "$claude" "CRLF-normalized duplicate was rewritten with mixed line endings"
+  assert_synced_duplicate "$agents" "$claude" "CRLF-normalized duplicate is not back in sync"
+  cp "$claude" "$repo/.after-heal"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed on the idempotent re-run after CRLF self-heal"
+  assert_contains "$out" "unchanged:" "healed CRLF duplicate was not reported unchanged"
+  cmp -s "$repo/.after-heal" "$claude" \
+    || fail "idempotent re-run modified the healed CRLF duplicate"
+  pass "fm-ensure-agents-md.sh: a marked duplicate survives a CRLF checkout normalization"
+}
+
 test_unmarked_claude_still_refuses_on_mismatch() {
   # A hand-authored CLAUDE.md this helper never created has no marker, so a
   # content mismatch must still fail safe as a genuine conflict rather than
@@ -473,6 +567,8 @@ test_fresh_repo_on_drvfs_never_symlinks_claude_md
 test_non_drvfs_mnt_mount_still_symlinks_claude_md
 test_both_real_files_with_different_content_still_conflicts
 test_marked_duplicate_resyncs_after_agents_only_edit
+test_crlf_marked_duplicate_stays_synced_and_resyncs
+test_marked_duplicate_survives_crlf_checkout_normalization
 test_unmarked_claude_still_refuses_on_mismatch
 test_legacy_unmarked_duplicate_upgrades_to_marker
 test_lowercase_agents_md_refuses_case_fragile_symlink
