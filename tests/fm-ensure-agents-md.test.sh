@@ -55,7 +55,10 @@ test_promoted_claude_md_stays_real_not_symlink() {
 
 Run tests with `make test`.
 EOF
-  "$ROOT/bin/fm-ensure-agents-md.sh" "$repo" >/dev/null 2>&1 || fail "fm-ensure-agents-md.sh failed for CLAUDE.md promotion"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) || fail "fm-ensure-agents-md.sh failed for CLAUDE.md promotion"
+  assert_contains "$out" "promoted:" "promotion did not report a promoted: line"
+  assert_contains "$out" "managed mirror" "promoted: line did not explain CLAUDE.md is now a managed mirror"
+  assert_contains "$out" "edit AGENTS.md" "promoted: line did not point future edits at AGENTS.md"
   agents="$repo/AGENTS.md"
   assert_present "$agents" "AGENTS.md was not created during promotion"
   [ ! -L "$repo/CLAUDE.md" ] || fail "CLAUDE.md was converted into a symlink during promotion"
@@ -575,12 +578,21 @@ test_legacy_unmarked_duplicate_upgrades_to_marker() {
   cp "$agents" "$claude"
   out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
     || fail "fm-ensure-agents-md.sh failed on a legacy byte-identical unmarked duplicate"
-  assert_contains "$out" "unchanged:" "legacy unmarked duplicate was not treated as already in sync"
+  # The upgrade run actually rewrites CLAUDE.md's bytes (adds the marker),
+  # so it must not claim "unchanged" - a crewmate reads this line to decide
+  # whether anything needs committing.
+  assert_contains "$out" "updated:" "legacy unmarked duplicate's marker upgrade was not reported as a change"
+  assert_not_contains "$out" "unchanged:" "legacy unmarked duplicate's marker upgrade was misreported as unchanged"
   assert_grep "fm-ensure-agents-md: this CLAUDE.md is a synced duplicate" "$claude" \
     "legacy unmarked duplicate was not upgraded with the sync marker"
   assert_grep "Build with the legacy script." "$claude" \
     "legacy duplicate's original content was lost during the marker upgrade"
-  pass "fm-ensure-agents-md.sh: a legacy byte-identical unmarked duplicate is upgraded with the sync marker"
+  # A further re-run has nothing left to change and must report unchanged -
+  # the marker survives the round trip rather than being re-added or lost.
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed on the re-run after the marker upgrade"
+  assert_contains "$out" "unchanged:" "re-run after the marker upgrade did not report unchanged"
+  pass "fm-ensure-agents-md.sh: a legacy byte-identical unmarked duplicate is upgraded with the sync marker and reports the change accurately"
 }
 
 test_lowercase_agents_md_refuses_case_fragile_symlink() {

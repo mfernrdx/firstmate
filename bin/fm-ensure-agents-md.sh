@@ -379,10 +379,18 @@ if [ -e "$AGENTS" ]; then
     # existed, or a hand-authored file that happens to match verbatim) and
     # an already-marked, already-synced duplicate both count as in sync.
     if cmp -s "$AGENTS" "$CLAUDE" || claude_matches_agents_synced; then
+      claude_was_marked=1
+      claude_has_marker || claude_was_marked=0
       ensure_maintenance_section
       sync_claude
       if [ "$MAINT_INJECTED" -eq 1 ]; then
         echo "updated: added ## Maintaining this file to AGENTS.md and CLAUDE.md in $DIR"
+      elif [ "$claude_was_marked" -eq 0 ]; then
+        # sync_claude() just rewrote CLAUDE.md's bytes to add the sync
+        # marker (a legacy duplicate from before it existed) - report the
+        # actual change rather than "unchanged", since a crewmate reads
+        # this line to decide whether anything needs committing.
+        echo "updated: added the sync marker to CLAUDE.md in $DIR"
       else
         echo "unchanged: AGENTS.md and CLAUDE.md are real, synced files in $DIR"
       fi
@@ -424,7 +432,7 @@ if [ -e "$CLAUDE" ]; then
     cp "$CLAUDE" "$AGENTS"
     ensure_maintenance_section
     sync_claude
-    echo "promoted: copied CLAUDE.md content into AGENTS.md and kept CLAUDE.md as a real file in $DIR"
+    echo "promoted: copied CLAUDE.md content into AGENTS.md; CLAUDE.md is now a managed mirror of AGENTS.md in $DIR - edit AGENTS.md from now on, not CLAUDE.md"
     exit 0
   fi
   echo "conflict: CLAUDE.md exists in $DIR but is not a regular file or symlink" >&2
