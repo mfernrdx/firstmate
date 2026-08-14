@@ -3,10 +3,12 @@
 # AGENTS.md is the real project-intrinsic knowledge file; CLAUDE.md points at
 # it for compatibility, as a relative symlink when this worktree's git will
 # actually materialize one, or as a real regular-file duplicate kept in sync
-# otherwise (see claude_symlink_unsafe() below). Creates a minimal AGENTS.md
-# skeleton when neither file exists, promotes a real CLAUDE.md file when it
-# is the only file present, and refuses to clobber distinct real files or
-# wrong symlinks.
+# otherwise (see claude_symlink_unsafe() below). A duplicate CLAUDE.md carries
+# a trailing sync marker so a later run can resync it after AGENTS.md alone
+# changes instead of hard-refusing a mismatch it caused itself (see
+# claude_has_marker() below). Creates a minimal AGENTS.md skeleton when
+# neither file exists, promotes a real CLAUDE.md file when it is the only
+# file present, and refuses to clobber distinct real files or wrong symlinks.
 # Owns the canonical "## Maintaining this file" self-governance wording for
 # project AGENTS.md files, injecting it idempotently into created skeletons,
 # promoted CLAUDE.md files, and any existing AGENTS.md that still lacks it.
@@ -47,6 +49,14 @@ cd "$DIR"
 
 AGENTS=AGENTS.md
 CLAUDE=CLAUDE.md
+
+# Trailing marker line this script appends to a real (non-symlink) CLAUDE.md
+# duplicate it writes. Its presence is how a later run tells "this CLAUDE.md
+# is a duplicate this helper owns and may resync" apart from "this CLAUDE.md
+# is hand-authored and a content mismatch is a genuine conflict" - see
+# claude_has_marker() below. Absence must fail safe, so an unmarked file
+# always keeps today's hard-conflict-on-mismatch behavior.
+CLAUDE_SYNC_MARKER='<!-- fm-ensure-agents-md: this CLAUDE.md is a synced duplicate of AGENTS.md, written because symlinks are not reliable here; edit AGENTS.md instead, then re-run fm-ensure-agents-md.sh -->'
 
 write_maintenance_section() {
   cat <<'EOF'
@@ -226,23 +236,47 @@ claude_symlink_unsafe() {
   return 1
 }
 
+# Write a real (non-symlink) CLAUDE.md as AGENTS.md's current content plus
+# the trailing sync marker, so a later run can tell this file apart from a
+# hand-authored one. AGENTS.md must already hold its final content
+# (including any injected maintenance section) before this runs.
+write_claude_duplicate() {
+  { cat "$AGENTS"; printf '%s\n' "$CLAUDE_SYNC_MARKER"; } > "$CLAUDE"
+}
+
+# True when CLAUDE.md's own last line is exactly the sync marker, i.e. this
+# file is a duplicate this helper wrote rather than something hand-authored.
+# Checked against the file's real, current content - never assumed from
+# knowing this helper created it in some earlier run.
+claude_has_marker() {
+  [ -f "$CLAUDE" ] || return 1
+  tail -n 1 "$CLAUDE" 2>/dev/null | grep -Fqx "$CLAUDE_SYNC_MARKER"
+}
+
+# True when CLAUDE.md's content is exactly AGENTS.md's content plus the
+# trailing sync marker - the steady state right after write_claude_duplicate.
+claude_matches_agents_synced() {
+  { cat "$AGENTS"; printf '%s\n' "$CLAUDE_SYNC_MARKER"; } | cmp -s - "$CLAUDE"
+}
+
 # Point CLAUDE.md at AGENTS.md. AGENTS.md must already hold its final content
 # (including any injected maintenance section) before this runs, so a
 # real-file duplicate starts in sync with it.
 create_claude() {
   if claude_symlink_unsafe; then
-    cp "$AGENTS" "$CLAUDE"
+    write_claude_duplicate
   else
     ln -s "$AGENTS" "$CLAUDE"
   fi
 }
 
 # Refresh a real (non-symlink) CLAUDE.md so its content matches AGENTS.md
-# again, e.g. after ensure_maintenance_section appended to AGENTS.md. A no-op
+# again, e.g. after ensure_maintenance_section appended to AGENTS.md, or to
+# resync a marked duplicate that drifted because AGENTS.md changed. A no-op
 # when CLAUDE.md is a symlink, since it already resolves live.
 sync_claude() {
   [ -L "$CLAUDE" ] && return 0
-  cp "$AGENTS" "$CLAUDE"
+  write_claude_duplicate
 }
 
 # Refuse a case-variant real memory file (issue #389). On a case-insensitive
@@ -307,7 +341,10 @@ if [ -e "$AGENTS" ]; then
     exit 0
   fi
   if [ -f "$CLAUDE" ]; then
-    if cmp -s "$AGENTS" "$CLAUDE"; then
+    # Byte-identical (a legacy duplicate from before the sync marker
+    # existed, or a hand-authored file that happens to match verbatim) and
+    # an already-marked, already-synced duplicate both count as in sync.
+    if cmp -s "$AGENTS" "$CLAUDE" || claude_matches_agents_synced; then
       ensure_maintenance_section
       sync_claude
       if [ "$MAINT_INJECTED" -eq 1 ]; then
@@ -315,6 +352,16 @@ if [ -e "$AGENTS" ]; then
       else
         echo "unchanged: AGENTS.md and CLAUDE.md are real, synced files in $DIR"
       fi
+      exit 0
+    fi
+    if claude_has_marker; then
+      # This CLAUDE.md is a duplicate this helper wrote, not a hand-authored
+      # file, so a mismatch here means AGENTS.md moved on since the last
+      # sync (the normal workflow: edit AGENTS.md, then re-run this
+      # helper) rather than a genuine conflict - resync instead of refusing.
+      ensure_maintenance_section
+      sync_claude
+      echo "synced: refreshed CLAUDE.md to match updated AGENTS.md in $DIR"
       exit 0
     fi
     echo "conflict: both AGENTS.md and CLAUDE.md are real files in $DIR with different content; reconcile them manually" >&2

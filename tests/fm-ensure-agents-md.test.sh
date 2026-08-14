@@ -7,6 +7,20 @@ set -u
 
 TMP_ROOT=$(fm_test_tmproot fm-ensure-agents-md)
 
+# Assert that <claude> is a real duplicate of <agents>: <agents>'s exact
+# content as a strict line prefix, plus exactly one trailing marker line.
+# Checks the generated file's actual shape rather than the script's own
+# marker literal, so it stays valid if that wording ever changes.
+assert_synced_duplicate() {
+  local agents=$1 claude=$2 msg=$3 agents_lines
+  agents_lines=$(wc -l < "$agents")
+  head -n "$agents_lines" "$claude" | cmp -s - "$agents" \
+    || fail "$msg (CLAUDE.md's leading content diverges from AGENTS.md)"
+  [ "$(wc -l < "$claude")" -eq "$((agents_lines + 1))" ] \
+    || fail "$msg (expected exactly one trailing marker line)"
+  assert_grep "fm-ensure-agents-md" "$claude" "$msg (missing sync marker)"
+}
+
 test_created_agents_md_includes_self_governance() {
   local repo agents
   repo="$TMP_ROOT/new-project"
@@ -54,8 +68,7 @@ EOF
   [ "$count" -eq 1 ] || fail "promotion wrote $count self-governance sections"
   assert_grep "Keep this file for knowledge useful to almost every future agent session in this project." "$agents" \
     "promoted AGENTS.md missing self-governance wording"
-  cmp -s "$agents" "$repo/CLAUDE.md" \
-    || fail "promoted AGENTS.md and CLAUDE.md are not kept in sync"
+  assert_synced_duplicate "$agents" "$repo/CLAUDE.md" "promoted AGENTS.md and CLAUDE.md are not kept in sync"
   # Re-run must stay idempotent: still no symlink, reported unchanged.
   out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
     || fail "fm-ensure-agents-md.sh failed on idempotent re-run after promotion"
@@ -242,8 +255,7 @@ test_symlinks_unreliable_creates_real_synced_claude_md() {
   assert_present "$agents" "AGENTS.md was not created for a core.symlinks=false repo"
   assert_present "$repo/CLAUDE.md" "CLAUDE.md was not created for a core.symlinks=false repo"
   [ ! -L "$repo/CLAUDE.md" ] || fail "a CLAUDE.md symlink was created on a core.symlinks=false repo"
-  cmp -s "$agents" "$repo/CLAUDE.md" \
-    || fail "real CLAUDE.md is not kept in sync with AGENTS.md"
+  assert_synced_duplicate "$agents" "$repo/CLAUDE.md" "real CLAUDE.md is not kept in sync with AGENTS.md"
   assert_grep "## Maintaining this file" "$repo/CLAUDE.md" \
     "real CLAUDE.md missing the self-governance section"
   # Re-run must stay idempotent.
@@ -266,8 +278,7 @@ test_symlinks_unreliable_agents_only_creates_real_claude_md() {
   out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
     || fail "fm-ensure-agents-md.sh failed adding CLAUDE.md on a core.symlinks=false repo"
   [ ! -L "$repo/CLAUDE.md" ] || fail "a CLAUDE.md symlink was created on a core.symlinks=false repo"
-  cmp -s "$agents" "$repo/CLAUDE.md" \
-    || fail "real CLAUDE.md is not kept in sync with existing AGENTS.md"
+  assert_synced_duplicate "$agents" "$repo/CLAUDE.md" "real CLAUDE.md is not kept in sync with existing AGENTS.md"
   pass "fm-ensure-agents-md.sh: adds a real, synced CLAUDE.md when only AGENTS.md exists and symlinks are unreliable"
 }
 
@@ -292,8 +303,8 @@ test_fresh_repo_on_drvfs_never_symlinks_claude_md() {
   [ ! -L "$repo/CLAUDE.md" ] || fail "a CLAUDE.md symlink was created on a simulated DrvFs mount"
   assert_present "$repo/AGENTS.md" "AGENTS.md was not created on a simulated DrvFs mount"
   assert_present "$repo/CLAUDE.md" "CLAUDE.md was not created on a simulated DrvFs mount"
-  cmp -s "$repo/AGENTS.md" "$repo/CLAUDE.md" \
-    || fail "real CLAUDE.md is not kept in sync with AGENTS.md on a simulated DrvFs mount"
+  assert_synced_duplicate "$repo/AGENTS.md" "$repo/CLAUDE.md" \
+    "real CLAUDE.md is not kept in sync with AGENTS.md on a simulated DrvFs mount"
   # Prove the DrvFs signal - not an incidental local filesystem limit - is
   # what blocked the symlink: a real ln -s in this same directory succeeds.
   ln -s "AGENTS.md" "$repo/.drvfs-probe-sanity-check" \
@@ -306,11 +317,18 @@ test_fresh_repo_on_drvfs_never_symlinks_claude_md() {
 test_non_drvfs_mnt_mount_still_symlinks_claude_md() {
   # A /mnt/<x> mount that is NOT DrvFs (an ordinary ext4 filesystem, say)
   # must not be penalized by path-prefix guesswork - only the real fstype
-  # and options decide.
+  # and options decide. The repo itself must sit under a genuinely
+  # /mnt-shaped mountpoint, not merely somewhere under $TMP_ROOT, or this
+  # test would still pass even if on_drvfs() regressed into matching on the
+  # /mnt/ path prefix instead of reading the real mount table.
   local repo real_repo proc_root out
-  repo="$TMP_ROOT/plain-mnt-project"
+  repo="$TMP_ROOT/mnt/z/plain-project"
   mkdir -p "$repo"
   real_repo=$(cd "$repo" && pwd -P)
+  case "$real_repo" in
+    */mnt/z/plain-project) : ;;
+    *) fail "test fixture repo path is not /mnt-shaped (got: $real_repo)" ;;
+  esac
   proc_root="$TMP_ROOT/fake-proc-plain-mnt"
   mkdir -p "$proc_root"
   printf '/dev/sdz1 %s ext4 rw,relatime 0 0\n' "$real_repo" > "$proc_root/mounts"
@@ -336,6 +354,92 @@ test_both_real_files_with_different_content_still_conflicts() {
   assert_present "$repo/CLAUDE.md" "CLAUDE.md was disturbed by the conflict check"
   assert_grep "different CLAUDE content" "$repo/CLAUDE.md" "CLAUDE.md content was overwritten"
   pass "fm-ensure-agents-md.sh: refuses two real files with different content"
+}
+
+test_marked_duplicate_resyncs_after_agents_only_edit() {
+  # The normal workflow on a symlink-unsafe project: a task edits only
+  # AGENTS.md (per bin/fm-brief.sh's Project memory section), then re-runs
+  # this helper. A previously helper-created real CLAUDE.md duplicate must
+  # self-heal instead of hard-refusing the resulting mismatch.
+  local repo agents claude out
+  repo="$TMP_ROOT/marked-drift-project"
+  mkdir -p "$repo"
+  git init -q "$repo"
+  git -C "$repo" config core.symlinks false
+  agents="$repo/AGENTS.md"
+  claude="$repo/CLAUDE.md"
+  "$ROOT/bin/fm-ensure-agents-md.sh" "$repo" >/dev/null 2>&1 \
+    || fail "fm-ensure-agents-md.sh failed creating the initial marked duplicate"
+  [ ! -L "$claude" ] || fail "expected a real duplicate, not a symlink, on a core.symlinks=false repo"
+  assert_grep "fm-ensure-agents-md: this CLAUDE.md is a synced duplicate" "$claude" \
+    "initial CLAUDE.md duplicate was not marked"
+  printf '\n- New durable note added after the initial sync.\n' >> "$agents"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh refused a marked duplicate's drift instead of resyncing"
+  assert_contains "$out" "synced:" "drifted marked duplicate was not reported as resynced"
+  assert_grep "New durable note added after the initial sync." "$claude" \
+    "resync did not propagate the AGENTS.md-only edit into CLAUDE.md"
+  cmp -s "$agents" "$claude" \
+    && fail "resynced CLAUDE.md should still carry the trailing marker, not be byte-identical to AGENTS.md"
+  # Re-run with nothing changed must be a byte-exact idempotent no-op.
+  cp "$claude" "$repo/.after-resync"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed on idempotent re-run after resync"
+  assert_contains "$out" "unchanged:" "idempotent re-run after resync did not report unchanged"
+  cmp -s "$repo/.after-resync" "$claude" \
+    || fail "idempotent re-run after resync modified CLAUDE.md"
+  pass "fm-ensure-agents-md.sh: a marked duplicate resyncs instead of conflicting after an AGENTS.md-only edit"
+}
+
+test_unmarked_claude_still_refuses_on_mismatch() {
+  # A hand-authored CLAUDE.md this helper never created has no marker, so a
+  # content mismatch must still fail safe as a genuine conflict rather than
+  # being silently overwritten - the marker's absence must never be read as
+  # license to resync.
+  local repo out rc
+  repo="$TMP_ROOT/unmarked-mismatch-project"
+  mkdir -p "$repo"
+  printf '# AGENTS content\n\nOriginal.\n' > "$repo/AGENTS.md"
+  printf '# AGENTS content\n\nHand-authored, deliberately different.\n' > "$repo/CLAUDE.md"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1)
+  rc=$?
+  [ "$rc" -ne 0 ] || fail "expected a non-zero exit for an unmarked, mismatched real CLAUDE.md"
+  assert_contains "$out" "conflict:" "unmarked mismatched CLAUDE.md did not report a conflict"
+  assert_grep "Hand-authored, deliberately different." "$repo/CLAUDE.md" \
+    "unmarked CLAUDE.md content was overwritten instead of refusing"
+  pass "fm-ensure-agents-md.sh: an unmarked real CLAUDE.md still refuses on mismatch rather than resyncing"
+}
+
+test_legacy_unmarked_duplicate_upgrades_to_marker() {
+  # A real CLAUDE.md duplicate from before this marker existed (byte-
+  # identical to AGENTS.md, no trailing marker) must still be recognized as
+  # in sync today, and gets upgraded with the marker so future drift on the
+  # same project self-heals instead of hard-refusing.
+  local repo agents claude out
+  repo="$TMP_ROOT/legacy-duplicate-project"
+  mkdir -p "$repo"
+  agents="$repo/AGENTS.md"
+  claude="$repo/CLAUDE.md"
+  printf '%s\n' \
+    '# Existing agent memory' \
+    '' \
+    'Build with the legacy script.' \
+    '' \
+    '## Maintaining this file' \
+    '' \
+    'Keep this file for knowledge useful to almost every future agent session in this project.' \
+    'Do not repeat what the codebase already shows; point to the authoritative file or command instead.' \
+    'Prefer rewriting or pruning existing entries over appending new ones.' \
+    'When updating this file, preserve this bar for all agents and keep entries concise.' > "$agents"
+  cp "$agents" "$claude"
+  out=$("$ROOT/bin/fm-ensure-agents-md.sh" "$repo" 2>&1) \
+    || fail "fm-ensure-agents-md.sh failed on a legacy byte-identical unmarked duplicate"
+  assert_contains "$out" "unchanged:" "legacy unmarked duplicate was not treated as already in sync"
+  assert_grep "fm-ensure-agents-md: this CLAUDE.md is a synced duplicate" "$claude" \
+    "legacy unmarked duplicate was not upgraded with the sync marker"
+  assert_grep "Build with the legacy script." "$claude" \
+    "legacy duplicate's original content was lost during the marker upgrade"
+  pass "fm-ensure-agents-md.sh: a legacy byte-identical unmarked duplicate is upgraded with the sync marker"
 }
 
 test_lowercase_agents_md_refuses_case_fragile_symlink() {
@@ -368,4 +472,7 @@ test_symlinks_unreliable_agents_only_creates_real_claude_md
 test_fresh_repo_on_drvfs_never_symlinks_claude_md
 test_non_drvfs_mnt_mount_still_symlinks_claude_md
 test_both_real_files_with_different_content_still_conflicts
+test_marked_duplicate_resyncs_after_agents_only_edit
+test_unmarked_claude_still_refuses_on_mismatch
+test_legacy_unmarked_duplicate_upgrades_to_marker
 test_lowercase_agents_md_refuses_case_fragile_symlink
