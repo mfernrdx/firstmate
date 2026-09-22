@@ -12,7 +12,7 @@ Verified on 2026-09-22 with codex-cli 0.155.1 unless a fact gives a newer versio
 | Skill invocation | `$<skill>`, for example `$no-mistakes`; `/<skill>` is Claude-only and Codex rejects it as "Unrecognized command". |
 | Resume | `codex resume <session-id>`, using the id printed on quit. |
 | Model flag | `--model <model>`. |
-| Effort flag | `-c 'model_reasoning_effort="<low\|medium\|high\|xhigh\|max>"'`, verified 2026-09-22 on codex-cli 0.155.1. The installed config schema accepts the flag, and a real `gpt-6-luna` smoke reached `reasoning effort: max`; `gpt-6-luna` is absent from catalog metadata, so Firstmate passes low through max without catalog gating and omits values outside the shared accepted set. |
+| Effort flag | `-c 'model_reasoning_effort="<low\|medium\|high\|xhigh\|max>"'`; Firstmate accepts low through max. See [Codex CLI reasoning-effort evidence](../../../../../docs/verification/runtime-backends.md#codex-cli-reasoning-effort) for live-verification limits. |
 | Model discovery | Open the current interactive session's `/model` picker. |
 | Marker | None; identity comes from ancestry, and `../../../bin/fm-harness.sh` is what keeps a retained foreign `CLAUDECODE` from renaming it. Verified on 2026-09-01 with codex-cli 0.152.0: the pane process is the `node` npm shim and the native `codex` binary runs as its foreground child, so a tool subprocess reaches the native name directly while the shim itself is identified from its script path. |
 
