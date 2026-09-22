@@ -1,0 +1,9 @@
+Live Firstmate refusal scenario
+
+Command under test: `bin/fm-spawn.sh smoke-luna-ultra <isolated-secondmate-home> --secondmate` with `config/secondmate-harness` set to `codex gpt-6-luna ultra`.
+
+Result:
+error: ultra effort requires pi or pi-signed with an explicit codex-native/<model> model
+Exit status: 1
+No task metadata: true
+No tmux worker window: true

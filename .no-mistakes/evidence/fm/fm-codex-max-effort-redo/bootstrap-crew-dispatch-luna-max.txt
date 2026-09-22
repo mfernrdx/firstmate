@@ -1,0 +1,12 @@
+Live bootstrap profile validation
+
+Command: `FM_BOOTSTRAP_DETECT_ONLY=1 FM_BOOTSTRAP_NETWORK=skip bin/fm-bootstrap.sh`
+The script ran against a disposable FM_HOME; detect-only mode skipped mutating sweeps and the network phase.
+
+Codex Luna/max input: `{"rules":[{"when":"deep work","use":{"harness":"codex","model":"gpt-6-luna","effort":"max"}}]}`
+Exit status: 0
+CREW_DISPATCH diagnostic: none (profile accepted)
+
+Adversarial Codex/Luna/ultra input: `{"default":{"harness":"codex","model":"gpt-6-luna","effort":"ultra"}}`
+Exit status: 0
+CREW_DISPATCH: invalid config/crew-dispatch.json - invalid effort: codex:ultra

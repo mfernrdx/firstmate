@@ -1,0 +1,34 @@
+Live Firstmate relaunch
+
+Command: `bin/fm-control.sh smoke-luna-live-relaunch relaunch --note 'Repeat the safe smoke response exactly; do not use tools or change files.'`
+Fixture: disposable secondmate home, local clean Git repository, temporary Codex HOME, and private tmux server.
+
+Firstmate result: `relaunched smoke-luna-live-relaunch harness=codex from=codex model=gpt-6-luna effort=max backend=tmux`
+
+Persisted profile after relaunch:
+harness=codex
+kind=secondmate
+model=gpt-6-luna
+effort=max
+spawn_gen=s1790113258.357894.24551
+
+Codex process argv:
+node /home/michael/.nvm/versions/node/v24.18.0/bin/codex --model gpt-6-luna -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox ⁣FIRSTMATE_OP: v1 launch-brief: Reply exactly LUNA_MAX_RELAUNCH_OK. Do not use tools or change files.
+
+Running Codex pane after relaunch:
+│ >_ OpenAI Codex (v0.155.1)              │
+│ model:       loading   /model to change │
+│ permissions: YOLO mode                  │
+│ >_ OpenAI Codex (v0.155.1)                     │
+│ model:       gpt-6-luna max   /model to change │
+│ permissions: YOLO mode                         │
+› ⁣FIRSTMATE_OP: v1 launch-brief: Reply exactly LUNA_MAX_RELAUNCH_OK. Do not use
+• LUNA_MAX_RELAUNCH_OK
+  done 2:39 PM
+Or run codex resume and select Reply LUNA_MAX_RELAUNCH_OK.
+│ >_ OpenAI Codex (v0.155.1)                     │
+│ model:       gpt-6-luna max   /model to change │
+│ permissions: YOLO mode                         │
+› ⁣FIRSTMATE_OP: v1 launch-brief: Reply exactly LUNA_MAX_RELAUNCH_OK. Do not use
+• LUNA_MAX_RELAUNCH_OK
+  done 2:41 PM

@@ -1,0 +1,7 @@
+Reading additional input from stdin...
+{"type":"thread.started","thread_id":"01a0cb00-1d49-73f0-bbd5-151e15b0d8ca"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"LUNA_MAX_LIVE_OK"}}
+{"type":"turn.completed","usage":{"input_tokens":22589,"cached_input_tokens":11008,"cache_write_input_tokens":0,"output_tokens":142,"reasoning_output_tokens":130}}
+
+EXIT_STATUS=0

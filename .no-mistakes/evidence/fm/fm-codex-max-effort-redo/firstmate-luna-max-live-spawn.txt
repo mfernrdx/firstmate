@@ -1,0 +1,88 @@
+Live Firstmate secondmate launch
+
+Command under test: `bin/fm-spawn.sh smoke-luna-max <isolated-secondmate-home> --secondmate`
+Isolated setup: temporary FM_HOME, temporary Codex HOME with a copied auth file, private tmux server, and `FM_GATE_REFUSE_BYPASS=1` for the synthetic home only.
+
+Firstmate output:
+spawned smoke-luna-max harness=codex kind=secondmate mode=secondmate yolo=off window=smoke:fm-smoke-luna-max worktree=<isolated-run>/secondmate-home
+
+Persisted profile:
+harness=codex
+kind=secondmate
+model=gpt-6-luna
+effort=max
+
+Codex process argv:
+node /home/michael/.nvm/versions/node/v24.18.0/bin/codex --model gpt-6-luna -c model_reasoning_effort="max" --dangerously-bypass-approvals-and-sandbox ⁣FIRSTMATE_OP: v1 launch-brief: Reply exactly LUNA_MAX_LAUNCH_OK. Do not use tools or change files.
+
+Codex terminal after accepting the isolated trust prompt:
+To run a command as administrator (user "root"), use "sudo <command>".
+See "man sudo_root" for details.
+
+michael@easybotlabsHQ:<isolated-run>/secondmate-home$ export GOTMP
+DIR=<task-gotmp>
+michael@easybotlabsHQ:<isolated-run>/secondmate-home$ export CHROM
+E_DEVTOOLS_AXI_BROWSER_URL='http://127.0.0.1:9222'
+michael@easybotlabsHQ:<isolated-run>/secondmate-home$ FM_ROOT_OVER
+RIDE= FM_STATE_OVERRIDE= FM_DATA_OVERRIDE= FM_PROJECTS_OVERRIDE= FM_CONFIG_OVERR
+IDE= FM_PUBLIC_FOLLOWUP_PRIMARY_HOME='<isolated-run>/primary' FM_H
+OME='<isolated-run>/secondmate-home' FM_TRACE_CONTEXT=off FM_SUPER
+VISION_MODEL=persistent env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI c
+odex --model 'gpt-6-luna' -c 'model_reasoning_effort="max"' --dangerously-bypass
+-approvals-and-sandbox "$('/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M
+35FQCXCQ92HHHZ8X3V680GH/bin/fm-operational-input.sh' encode launch-brief < '/tmp
+/fm-luna-max-live.td1QWl/secondmate-home/data/charter.md')"
+WARNING: proceeding, even though we could not create PATH aliases: Refusing to c
+reate helper binaries under temporary dir "/tmp" (codex_home: AbsolutePathBuf("/
+tmp/fm-luna-max-live.td1QWl/user-home/.codex"))
+> You are in <isolated-run>/secondmate-home
+
+  Do you trust the contents of this directory? Working with untrusted contents
+  comes with higher risk of prompt injection. Trusting the directory allows
+  project-local config, hooks, and exec policies to load.
+
+› 1. Yes, continue
+  2. No, quit
+
+  Press enter to continue
+╭─────────────────────────────────────────╮
+│ >_ OpenAI Codex (v0.155.1)              │
+│                                         │
+│ model:       loading   /model to change │
+│ directory:   /tmp/…/secondmate-home     │
+│ permissions: YOLO mode                  │
+╰─────────────────────────────────────────╯
+
+
+› Ask Codex to do anything
+
+  gpt-6-luna default · <isolated-run>/secondmate-home
+
+╭────────────────────────────────────────────────╮
+│ >_ OpenAI Codex (v0.155.1)                     │
+│                                                │
+│ model:       gpt-6-luna max   /model to change │
+│ directory:   /tmp/…/secondmate-home            │
+│ permissions: YOLO mode                         │
+╰────────────────────────────────────────────────╯
+
+  Tip: This is GPT-6, a new generation of intelligence. Astra is state-of-the-
+  art in coding, computer use, science, and professional work. Give it a hard
+  problem, a half-formed idea, or anything you've been meaning to build. See
+  where it takes you.
+
+
+› ⁣FIRSTMATE_OP: v1 launch-brief: Reply exactly LUNA_MAX_LAUNCH_OK. Do not use
+  tools or change files.
+
+
+• You have 3 usage limit resets available. Run /usage to use one.
+
+• LUNA_MAX_LAUNCH_OK
+
+  done 2:29 PM
+
+
+› Ask Codex to do anything
+
+  gpt-6-luna max · <isolated-run>/secondmate-home · Reply with la…
