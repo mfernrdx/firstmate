@@ -692,6 +692,7 @@ herdr_queue_ring() {  # <dir> <capture> [env assignments...]
     | sed "${HERDR_SCREEN_SED:-p;d}" > "$dir/screen.ansi"
   [ -z "$capture" ] || cat "$capture" >> "$dir/screen.ansi"
   HERDR_RING_RC=0
+  # shellcheck disable=SC2016 # $1/$2 expand in the inner bash, not here
   env PATH="$dir/fakebin:$PATH" FM_FAKE_HERDR_CAPTURE="$dir/screen.ansi" \
     FM_SEND_LOG="$dir/send.log" FM_BACKEND_HERDR_IDLE_SHELL_PROOF_POLLS=1 "$@" \
     bash -c '. "$1"; fm_task_inbox_ring herdr sess:p1 "$2" ""' _ \
