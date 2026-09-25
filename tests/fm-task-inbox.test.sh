@@ -563,7 +563,7 @@ test_watcher_submits_idle_codex_queued_doorbell() {
   age_path "$rec"
   capture="$dir/queued.capture"
   sed "s|@@INBOX_DIR@@|$state/t1.inbox|g" \
-    "$ROOT/tests/fixtures/codex/queued-firstmate-doorbell.txt" > "$capture"
+    "$ROOT/tests/fixtures/codex/queued-firstmate-doorbell.screen" > "$capture"
   composer_state=$(PATH="$dir/fakebin:$PATH" FM_FAKE_TMUX_CAPTURE="$capture" \
     inbox_lib "$state" fm_backend_composer_state tmux sess:fm-t1 fm-t1)
   PATH="$dir/fakebin:$PATH" FM_FAKE_TMUX_CAPTURE="$capture" FM_FAKE_TMUX_CURSOR_ROW=5 \
@@ -603,7 +603,7 @@ test_watcher_waits_for_busy_codex_queue() {
   age_path "$rec"
   capture="$dir/queued-busy.capture"
   sed "s|@@INBOX_DIR@@|$state/t1.inbox|g" \
-    "$ROOT/tests/fixtures/codex/queued-firstmate-doorbell.txt" > "$capture"
+    "$ROOT/tests/fixtures/codex/queued-firstmate-doorbell.screen" > "$capture"
   printf '\n• Working (6s • esc to interrupt)\n' >> "$capture"
   watch_bg "$state" "$dir/fakebin" "$out" \
     FM_SEND_LOG="$log" FM_FAKE_TMUX_CAPTURE="$capture" FM_FAKE_TMUX_CURSOR_ROW=5 \
@@ -629,7 +629,7 @@ test_codex_queue_recovery_respects_scope_and_key_support() {
   rec=$(inbox_lib "$state" fm_task_inbox_write "$state" t1 "please continue")
   capture="$dir/queued.capture"
   sed "s|@@INBOX_DIR@@|$state/t1.inbox|g" \
-    "$ROOT/tests/fixtures/codex/queued-firstmate-doorbell.txt" > "$capture"
+    "$ROOT/tests/fixtures/codex/queued-firstmate-doorbell.screen" > "$capture"
   PATH="$dir/fakebin:$PATH" FM_FAKE_TMUX_CAPTURE="$capture" FM_FAKE_TMUX_CURSOR_ROW=5 \
     FM_SEND_LOG="$log" inbox_lib "$state" fm_task_inbox_ring tmux sess:fm-t1 "$rec" fm-t1 || rc=$?
   [ "$rc" = 0 ] || fail "the non-Codex target's ordinary ring failed, got $rc"
@@ -688,7 +688,7 @@ herdr_queue_ring() {  # <dir> <capture> [env assignments...]
   fm_write_meta "$state/t1.meta" "window=sess:p1" "kind=ship" "harness=codex" "backend=herdr"
   rec=$(inbox_lib "$state" fm_task_inbox_write "$state" t1 "please continue")
   sed "s|@@INBOX_DIR@@|$state/t1.inbox|g" \
-    "$ROOT/tests/fixtures/codex/queued-firstmate-doorbell-herdr-ansi.txt" \
+    "$ROOT/tests/fixtures/codex/queued-firstmate-doorbell-herdr-ansi.screen" \
     | sed "${HERDR_SCREEN_SED:-p;d}" > "$dir/screen.ansi"
   [ -z "$capture" ] || cat "$capture" >> "$dir/screen.ansi"
   HERDR_RING_RC=0
