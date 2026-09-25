@@ -524,6 +524,7 @@ FM_TEST_SUMMARY total=1 failed=0 skipped_gate=0 duration_ms=31901
 The opt-in live guard was run against codex-cli 0.155.1 on 2026-09-25 with `FM_SEND_INBOX_LIVE_E2E=1 FM_SEND_INBOX_LIVE_HARNESSES=codex bin/fm-test-run.sh tests/fm-send-inbox-doorbell-live-e2e.test.sh`.
 Codex displayed the queued doorbell while its held shell tool ran, then acted on and acknowledged it after the tool returned without needing the re-ring to send keys in this run.
 That live result verifies the real queued UI and delivery acknowledgement; the captured-pane regression is the direct check of the idle re-ring's Escape-then-Enter behavior.
+The herdr backend reads the composer from an ANSI pane capture, where Codex's dim `Ask Codex to do anything` hint is provably ghost text; `tests/fm-task-inbox.test.sh` replays a styled idle+queued screen (`tests/fixtures/codex/queued-firstmate-doorbell-herdr-ansi.txt`, modeled on the 0.155.1 render, not a byte capture from a stuck pane) through a stubbed `herdr` CLI and asserts Escape then Enter when idle, and no keys when native state or the Working line says busy or the composer holds typed text. A plain-text herdr fallback capture cannot prove the hint is ghost text, reads `unknown`, and is deliberately left to the ordinary ladder.
 
 ```text
 ok - codex (codex-cli 0.155.1): the doorbell reached a real worker, which acted and acked with the mv

@@ -645,6 +645,94 @@ test_codex_queue_recovery_respects_scope_and_key_support() {
   pass "inbox: Codex queue recovery respects harness and backend key capabilities"
 }
 
+# A fake herdr for the Codex queued-doorbell cases: the pane reads replay the
+# captured screen (`--format ansi` gets the styled fixture, a plain read gets
+# it with SGR stripped), agent get reports FM_FAKE_HERDR_STATUS, and every
+# send-keys is logged to FM_SEND_LOG.
+make_herdr_queue_stub() {  # <dir> -> echoes fakebin dir
+  local fb="$1/fakebin"
+  mkdir -p "$fb"
+  cat > "$fb/herdr" <<'SH'
+#!/usr/bin/env bash
+set -u
+case "${1:-} ${2:-}" in
+  "status --json") printf '{"server":{"running":true}}\n' ;;
+  "pane get") printf '{"result":{"pane":{"pane_id":"p1"}}}\n' ;;
+  "agent get") printf '{"result":{"agent":{"agent":"codex","agent_status":"%s"}}}\n' "${FM_FAKE_HERDR_STATUS:-idle}" ;;
+  "pane process-info")
+    printf '{"result":{"type":"pane_process_info","process_info":{"pane_id":"p1","shell_pid":4242,"foreground_processes":[{"pid":4243,"name":"codex","argv":["codex"]}]}}}\n' ;;
+  "pane read")
+    case " $* " in
+      *" --format ansi "*) cat "$FM_FAKE_HERDR_CAPTURE" ;;
+      *) sed 's/\x1b\[[0-9;]*m//g' "$FM_FAKE_HERDR_CAPTURE" ;;
+    esac ;;
+  "pane send-keys")
+    printf 'KEY:%s\n' "$4" >> "${FM_SEND_LOG:-/dev/null}" ;;
+  "pane send-text"|"pane run")
+    printf 'TEXT:%s\n' "$4" >> "${FM_SEND_LOG:-/dev/null}" ;;
+esac
+exit 0
+SH
+  chmod +x "$fb/herdr"
+  printf '%s\n' "$fb"
+}
+
+# Ring one herdr-backed Codex queued doorbell against a captured screen and
+# leave the logged keys in <dir>/send.log. Extra args are env assignments.
+herdr_queue_ring() {  # <dir> <capture> [env assignments...]
+  local dir=$1 capture=$2 state rec
+  shift 2
+  state="$dir/state"; : > "$dir/send.log"
+  make_herdr_queue_stub "$dir" >/dev/null
+  mkdir -p "$state"
+  fm_write_meta "$state/t1.meta" "window=sess:p1" "kind=ship" "harness=codex" "backend=herdr"
+  rec=$(inbox_lib "$state" fm_task_inbox_write "$state" t1 "please continue")
+  sed "s|@@INBOX_DIR@@|$state/t1.inbox|g" \
+    "$ROOT/tests/fixtures/codex/queued-firstmate-doorbell-herdr-ansi.txt" \
+    | sed "${HERDR_SCREEN_SED:-p;d}" > "$dir/screen.ansi"
+  [ -z "$capture" ] || cat "$capture" >> "$dir/screen.ansi"
+  HERDR_RING_RC=0
+  env PATH="$dir/fakebin:$PATH" FM_FAKE_HERDR_CAPTURE="$dir/screen.ansi" \
+    FM_SEND_LOG="$dir/send.log" FM_BACKEND_HERDR_IDLE_SHELL_PROOF_POLLS=1 "$@" \
+    bash -c '. "$1"; fm_task_inbox_ring herdr sess:p1 "$2" ""' _ \
+    "$ROOT/bin/fm-task-inbox-lib.sh" "$rec" >/dev/null 2>&1 || HERDR_RING_RC=$?
+}
+
+test_herdr_idle_codex_queue_is_submitted() {
+  local dir
+  dir="$TMP_ROOT/herdr-codex-queued-idle"; mkdir -p "$dir"
+  herdr_queue_ring "$dir" "" FM_STATE_OVERRIDE="$dir/state"
+  [ "$HERDR_RING_RC" = 0 ] || fail "herdr idle Codex queue ring failed ($HERDR_RING_RC):"$'\n'"$(cat "$dir/send.log")"
+  [ "$(cat "$dir/send.log")" = $'KEY:escape\nKEY:enter' ] \
+    || fail "herdr idle Codex queue was not submitted with Escape then Enter:"$'\n'"$(cat "$dir/send.log")"
+  pass "inbox: herdr's styled Codex idle+queued screen reads empty and is submitted with Escape and Enter"
+}
+
+test_herdr_working_codex_queue_is_left_alone() {
+  local dir extra
+  dir="$TMP_ROOT/herdr-codex-queued-working"; mkdir -p "$dir"
+  herdr_queue_ring "$dir" "" FM_STATE_OVERRIDE="$dir/state" FM_FAKE_HERDR_STATUS=working
+  [ "$HERDR_RING_RC" = 1 ] && [ ! -s "$dir/send.log" ] \
+    || fail "herdr working Codex received keys (rc=$HERDR_RING_RC):"$'\n'"$(cat "$dir/send.log")"
+  dir="$TMP_ROOT/herdr-codex-queued-working-line"; mkdir -p "$dir"
+  extra="$dir/extra"; printf '\n• Working (6s • esc to interrupt)\n' > "$extra"
+  herdr_queue_ring "$dir" "$extra" FM_STATE_OVERRIDE="$dir/state"
+  [ "$HERDR_RING_RC" = 1 ] && [ ! -s "$dir/send.log" ] \
+    || fail "herdr Codex showing the Working line received keys (rc=$HERDR_RING_RC):"$'\n'"$(cat "$dir/send.log")"
+  pass "inbox: a herdr Codex queue waits while native state or the Working line says busy"
+}
+
+test_herdr_typed_codex_composer_is_left_alone() {
+  local dir esc
+  esc=$(printf '\033')
+  dir="$TMP_ROOT/herdr-codex-queued-typed"; mkdir -p "$dir"
+  HERDR_SCREEN_SED="s|${esc}\\[2mAsk Codex to do anything|half typed reply${esc}[2m|" \
+    herdr_queue_ring "$dir" "" FM_STATE_OVERRIDE="$dir/state"
+  [ "$HERDR_RING_RC" = 1 ] && [ ! -s "$dir/send.log" ] \
+    || fail "herdr Codex with typed composer text received keys (rc=$HERDR_RING_RC):"$'\n'"$(cat "$dir/send.log")"
+  pass "inbox: a herdr Codex queue is left alone when the composer holds typed text"
+}
+
 test_watcher_quiet_on_healthy_inbox() {
   local dir state out log pid
   dir=$(setup_watch_case healthy)
@@ -810,6 +898,9 @@ test_watcher_waits_on_busy_pane
 test_watcher_submits_idle_codex_queued_doorbell
 test_watcher_waits_for_busy_codex_queue
 test_codex_queue_recovery_respects_scope_and_key_support
+test_herdr_idle_codex_queue_is_submitted
+test_herdr_working_codex_queue_is_left_alone
+test_herdr_typed_codex_composer_is_left_alone
 test_watcher_quiet_on_healthy_inbox
 test_watcher_ack_silences_unwritable_ladder
 test_watcher_surfaces_unwritable_ladder
