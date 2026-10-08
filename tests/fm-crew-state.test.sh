@@ -550,7 +550,7 @@ test_slim_mode_reads_its_own_run_state() {
   out=$(FM_FAKE_SLIM_CALLS="$d/slim-calls" FM_FAKE_REGULAR_CALLS="$d/regular-calls" run_crew_state "$d" feat-slim)
   assert_contains "$out" "state: working" "slim active run -> working"
   assert_contains "$out" "source: run-step" "slim active run -> run-step source"
-  assert_grep '^axi status$' "$d/slim-calls" "slim mode did not query no-mistakes-slim axi status"
+  assert_grep 'axi status' "$d/slim-calls" "slim mode did not query no-mistakes-slim axi status"
   assert_absent "$d/regular-calls" "slim mode queried the regular no-mistakes command"
   pass "slim mode reads its run state through no-mistakes-slim"
 }

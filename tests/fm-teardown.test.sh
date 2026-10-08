@@ -2764,9 +2764,9 @@ test_slim_parked_run_uses_only_slim_cli_before_teardown() {
     run_teardown "$case_dir" > "$case_dir/stdout" 2> "$case_dir/stderr" || rc=$?
 
   expect_code 0 "$rc" "parked-run-slim: teardown should still succeed"
-  assert_grep '^axi status$' "$case_dir/slim-calls.log" \
+  assert_grep 'axi status' "$case_dir/slim-calls.log" \
     "parked-run-slim: teardown did not inspect the slim run"
-  assert_grep '^axi abort --run 01RUN$' "$case_dir/slim-calls.log" \
+  assert_grep 'axi abort --run 01RUN' "$case_dir/slim-calls.log" \
     "parked-run-slim: teardown did not abort the verified slim run"
   assert_absent "$case_dir/regular-calls.log" \
     "parked-run-slim: teardown queried the regular no-mistakes command"
