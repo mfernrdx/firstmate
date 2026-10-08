@@ -75,12 +75,12 @@ The explicit resolution is written by the actor that answers, not the busy worke
 This home's answerer close, pending-reply escalation close, and captain-held transfer use the provenance-guarded append owned by `bin/fm-wake-lib.sh`, so they advance the watcher marker only across their own bytes when all earlier bytes were already announced; pending or interleaved foreign bytes fail toward an ordinary wake.
 A turn-ended-only queue row omits its historical status annotation when that status file exactly matches the same seen marker.
 Any direct or remaining historical annotation prints every status line unread at the presentation cursor instead of replaying only the latest line.
-`bin/fm-crew-state.sh <id>` is the cheap current-state read for an actionable heartbeat review: it attributes an active or terminal no-mistakes run under the shared run-attribution contract, then keeps that run-step authoritative even if the pane has closed, except that a `blocked:` event reporting a refused or missing daemon socket outranks a potentially stale active run record.
+`bin/fm-crew-state.sh <id>` is the cheap current-state read for an actionable heartbeat review: it attributes an active or terminal run from the task's selected pipeline under the shared run-attribution contract, then keeps that run-step authoritative even if the pane has closed, except that a `blocked:` event reporting a refused or missing daemon socket outranks a potentially stale active run record.
 For other daemon, timeout, or unreachability claims, a running or fixing run with recent pipeline-reported activity supersedes the event and names reattachment as the recovery instead of surfacing a false block.
 [`bin/fm-nm-run-lib.sh`](../bin/fm-nm-run-lib.sh)'s header owns the exact branch, head, pipeline-custody, and newest-first attribution rules.
 It also owns which binding run wins when more than one recorded run binds to the same worktree: a live run outranks a terminal one, so a crashed run sitting at the worktree's own commit never reports a healthy task as failed while its live successor is still validating.
 A run head the task copy cannot resolve locally is attributed only when the pipeline's own runs ledger proves it is an active continuation of the submitted head, so a pipeline fix round never reads as an older failed run.
-During no-mistakes' `ci` monitor phase, it also reads the ci step log tail because `axi status` reports both "still waiting on checks" and "checks green, waiting on merge" as `ci,running`.
+During the selected pipeline's `ci` monitor phase, it also reads the ci step log tail because `axi status` reports both "still waiting on checks" and "checks green, waiting on merge" as `ci,running`.
 The most recent recognized ci log marker wins, so checks-green monitoring reports done while a later re-arm, failed-check, or issue marker returns the crew to working.
 A terminal failed run whose only failure is the ci monitor step, after every substantive step completed and the same marker reads checks green, also reports done with the run's PR URL, because a monitor whose only remaining job is to observe a human merge decision must not convert the absence of that decision into a failure verdict.
 In the coarse runs-ledger fallback, which has no steps table and no ci log, a terminal failed record whose daemon an explicit `daemon status` probe proves down reports unknown as unverified instead: an instrument failure must never read as work failure.
@@ -242,7 +242,7 @@ The helper's header owns the exact signal detection, relocated-home limitation, 
 
 ## Two task shapes
 
-Ship tasks change projects and ship by task mode (`no-mistakes`, `no-mistakes-slim`, `direct-PR`, or `local-only`); scout tasks leave standalone investigation reports at `data/<id>/report.md` and never push.
+Ship tasks change projects and use an explicit delivery mode; scout tasks leave standalone investigation reports at `data/<id>/report.md` and never push.
 The intake and authority contract in `AGENTS.md` owns when separate scout research is warranted.
 
 ## Dispatch profiles
@@ -300,8 +300,8 @@ The `data/secondmates.md` line contract is owned by the [`secondmate-provisionin
 
 ## Delivery modes are explicit per task
 
-`no-mistakes` tasks run the full validation pipeline, `no-mistakes-slim` tasks run the separate slim pipeline, `direct-PR` tasks open PRs without a validation pipeline, and `local-only` tasks stay local until firstmate performs an approved fast-forward merge.
-Each task's mode and `yolo` merge posture are firstmate's decision at intake.
+The per-task mode decision and delivery contract are owned by the [selected delivery path in `AGENTS.md`](../AGENTS.md#selected-delivery-path-and-merge-authority).
+This section describes how that selected path is carried through the implementation.
 The mode is passed explicitly to `bin/fm-brief.sh`, and both values are passed explicitly to `bin/fm-spawn.sh` and `bin/fm-promote.sh`; each command refuses to guess the values it consumes.
 A ship brief records its mode as a fixed machine-readable line and the spawn refuses to launch on a different one, so the worker's instructions and the recorded task delivery cannot diverge.
 `bin/fm-dod-lib.sh` is the one owner of that mode's definition of done, rendered both into a generated ship brief and into the ship instructions a promoted scout receives, so a promoted worker cannot be handed a weaker contract than a briefed one.
@@ -342,7 +342,7 @@ Teardown is fail-closed for ship worktrees: dirty worktrees refuse, and committe
 A pool worktree is only returned after teardown passes the slot-ownership proof: a contradictory task record or a supported live endpoint refuses without touching either task, and no discard authority relaxes that.
 A slot's own owner claim, written by the spawn that takes it under the allocation lock and owned by [`bin/fm-wake-lib.sh`](../bin/fm-wake-lib.sh), covers a slot reassigned to a task that left no record the scan could reach: a claim naming a different task releases nothing - teardown warns, names the claimant, and finishes only the task's own cleanup - because Treehouse's own live process lease cannot answer ownership once the worker's exit releases it.
 Allocation and return serialize on one project lock per machine-local Firstmate tree: every home reachable through local parent links shares that lock, and a home seeded from another machine anchors its own, because a lock taken on this filesystem is neither held nor observable across that boundary.
-Before the worktree is returned, teardown concludes the task's own no-mistakes run when it is parked at a gate, including a run whose head the task copy cannot resolve - the shared runs-ledger continuation proof is the only recognition for that case, so cleanup never orphans a parked run the pipeline advanced past the submitted head.
+Before the worktree is returned, teardown concludes the task's own selected-pipeline run when it is parked at a gate, including a run whose head the task copy cannot resolve - the shared runs-ledger continuation proof is the only recognition for that case, so cleanup never orphans a parked run the pipeline advanced past the submitted head.
 [`bin/fm-teardown.sh`](../bin/fm-teardown.sh)'s header owns the landed-work proofs, slot-ownership proof, PR-discovery fallback, pre-teardown run conclusion, and stale-lock recovery procedure; [`tests/fm-teardown-endpoint-safety.test.sh`](../tests/fm-teardown-endpoint-safety.test.sh) and [`tests/fm-secondmate-safety.test.sh`](../tests/fm-secondmate-safety.test.sh) pin the slot-collision boundary.
 
 ## Optional Relay
@@ -429,7 +429,7 @@ The procedure and outcome vocabulary are owned by the [`/updatefirstmate` skill]
 
 ## Restart-proof
 
-Fleet state lives in each task's session-provider backend (tmux by hard default, herdr or cmux when selected or auto-detected, zellij/orca when explicitly selected), no-mistakes run records, status event logs, local markdown under `data/` including `data/captain.md`, `data/captain-shared.md`, and `data/learnings.md`, and persistent secondmate homes.
+Fleet state lives in each task's session-provider backend (tmux by hard default, herdr or cmux when selected or auto-detected, zellij/orca when explicitly selected), selected-pipeline run records, status event logs, local markdown under `data/` including `data/captain.md`, `data/captain-shared.md`, and `data/learnings.md`, and persistent secondmate homes.
 For herdr, respawning after a server-restored layout closes and replaces confirmed no-agent or dead task-tab husks instead of requiring manual tab cleanup.
 At session start, confirmed-dead secondmate agent endpoints are closed and relaunched through the same secondmate spawn path, while ambiguous liveness reads are left untouched to avoid duplicate supervisors.
 Use `/stow` before an intentional reset when the conversation may hold durable knowledge that has not yet been written to disk; after that, the next firstmate session can reconcile and carry on.

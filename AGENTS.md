@@ -466,7 +466,7 @@ Each skill owns its own daemon procedure, which is otherwise identical; these sa
 
 ### Stuck-worker trigger
 
-For the full `stuck-crewmate-recovery` trigger, including a live worker claiming its no-mistakes pipeline is dead, unreachable, or timed out, follow section 13.
+For the full `stuck-crewmate-recovery` trigger, including a live worker claiming its no-mistakes or no-mistakes-slim pipeline is dead, unreachable, or timed out, follow section 13.
 
 ## 9. Escalation and captain etiquette
 

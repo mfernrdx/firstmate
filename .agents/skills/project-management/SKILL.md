@@ -42,7 +42,7 @@ Choose that posture when adding or creating the project:
 - `no-mistakes-slim` runs the slim validation pipeline before a PR.
 - `direct-PR` pushes and opens a PR without a validation pipeline.
 - `local-only` has no required remote or PR and lands only through the approved local fast-forward path.
-- `no-mistakes-prod-only` is a conditional policy rather than one flat mode: routine low-risk internal tool or skill PRs ship `no-mistakes-slim`, other low-risk genuinely internal-only tooling, automation, contributor or operator process, and release or submission work ships `direct-PR`, while risky, product-facing, mixed, and uncertain work ships full `no-mistakes`.
+- `no-mistakes-prod-only` is a conditional project posture rather than one flat task mode; classify its work using the [task-mode selection rules in `AGENTS.md`](../../../AGENTS.md#selected-delivery-path-and-merge-authority).
 
 `no-mistakes-prod-only` is the default for a newly added or created remote-backed project when the captain specifies nothing, and a project with no remote defaults to `local-only`.
 State that resolved default while confirming the source, local name, and posture instead of asking the captain to choose from scratch, and record a flat mode instead whenever they ask for one.
