@@ -1,0 +1,58 @@
+$ no-mistakes-slim --help
+Local Git proxy that validates code before pushing to the configured target
+
+Usage:
+  no-mistakes-slim [flags]
+  no-mistakes-slim [command]
+
+Available Commands:
+  attach      Attach to the active pipeline run
+  axi         Agent interface: drive no-mistakes from an autonomous agent
+  ci-workflow Generate .github/workflows/ci.yml from .no-mistakes.yaml commands
+  completion  Generate the autocompletion script for the specified shell
+  daemon      Manage the no-mistakes-slim daemon
+  doctor      Check system health and dependencies
+  eject       Remove no-mistakes-slim gate from the current repository
+  eval        Inspect and locally replay review evaluation cases
+  help        Help about any command
+  init        Initialize no-mistakes-slim gate for the current repository
+  rerun       Rerun the pipeline for the current branch
+  runs        List pipeline runs for the current repository
+  stats       Show historical no-mistakes usage stats
+  status      Show status of the current repository
+  sync        Safely move the current branch to an exact pipeline-pushed head
+  update      Update no-mistakes and reset the daemon
+
+Flags:
+  -h, --help          help for no-mistakes-slim
+      --skip string   comma-separated pipeline steps to skip for a new run
+  -v, --version       version for no-mistakes-slim
+  -y, --yes           run setup wizard and accept defaults automatically
+
+Use "no-mistakes-slim [command] --help" for more information about a command.
+
+$ no-mistakes-slim axi --help
+Agent eXperience Interface for no-mistakes. Prints token-efficient TOON
+to stdout and is driven entirely by flags (no interactive prompts).
+Running `no-mistakes-slim axi` with no subcommand shows the current state.
+
+Usage:
+  no-mistakes-slim axi [flags]
+  no-mistakes-slim axi [command]
+
+Available Commands:
+  abort       Cancel the active pipeline run
+  answer      Answer a question the reviewer asked while reviewing
+  logs        Show one pipeline step's recorded findings and log output
+  respond     Answer the current approval gate and continue the run
+  run         Validate your code changes, blocking until a decision point or the outcome
+  status      Show a current-branch or explicitly selected run in detail
+  sync        Check or apply guarded current-branch synchronization
+
+Flags:
+  -h, --help   help for axi
+
+Use "no-mistakes-slim axi [command] --help" for more information about a command.
+
+$ no-mistakes-slim status (from isolated empty task dir)
+repo not initialized (run 'no-mistakes-slim init' first)

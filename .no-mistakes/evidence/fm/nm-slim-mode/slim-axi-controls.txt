@@ -1,0 +1,127 @@
+$ no-mistakes-slim axi run --help
+Triggers a pipeline run for the current branch and drives it. Without
+--yes it blocks until the first approval gate, CI-ready point, or final outcome and
+prints it. With --yes it auto-resolves eligible gates (fixing actionable
+findings - including ask-user findings, with no escalation - then
+accepting the result) until a decision point or outcome.
+Protected-path and Test unvalidated-work refusals require an explicit
+response, even with --yes, and so does an open review question, which is
+settled by `axi answer` rather than by a verdict.
+
+Starting a new run requires --intent TEXT, --intent-file PATH, or --intent -
+(read stdin to EOF). Pass what the user set out to accomplish, not a
+description of the diff. Inputs are mutually exclusive and must not be
+empty or whitespace-only; no transcript inference is used. File/stdin
+text reaches the run request unchanged; ordinary runs still trim outer
+whitespace when storing intent. Prefer file/stdin to interpolating prose
+into shell commands: the caller's shell can expand
+backticks and dollars in --intent TEXT before no-mistakes receives it.
+Ordinary reattachment needs no input and keeps the existing run's intent.
+
+--wait bounds this hold (default 8m) so an agent harness with a 10-minute
+tool cap gets a structured return instead of an unbounded hang. Elapsed wait
+is not a failed run: inspect with axi status and reattach. A slow live daemon
+is retried after a health probe rather than reported as I/O failure.
+
+--launch-nonce with --validation-generation enables strict proof mode.
+Before driving, AXI emits a receipt with the durable run ID, created or
+reused disposition, full submitted head, and a digest of the exact
+persisted intent; raw intent is never included.
+
+--base-branch targets an integration branch other than the repository default
+for this run only (for example an epic branch). It overrides pr.base_branch
+in repo config and is persisted on the run for rebase, PR, and CI steps.
+
+--no-publish-intent keeps the generated public Intent section out of the
+PR body for this run. It is tighten-only: it can never publish intent on a
+repository whose trusted pr.publish_intent disabled it. The full intent
+still reaches every step prompt except the PR-drafting turns, which then
+draft from the diff and commit messages only. It is persisted on the run;
+the global intent.publish_intent: false default applies to runs started
+without it. The running daemon must honor it; an older daemon is refused.
+
+--closes <issue> adds a GitHub closing reference (Closes #42) to the PR
+body's Issues section. Repeat it for each issue the PR fully resolves; a
+value is an issue number or owner/repo#42. References are deduplicated,
+kept through that run's PR-body refreshes, inherited by rerun, and verified
+on the live PR; a later run started without --closes drops them. Without it
+no closing reference is added or inferred. GitHub closes the issue only when
+the PR merges into the default branch. Reattaching may add references until
+the PR body has been composed. It cannot be combined with --skip pr.
+
+--model and/or --effort opt into an immutable Pi profile for a new run.
+An omitted field comes from agent_config.pi; both must resolve. Requires
+Pi-only agents; raw native selection flags conflict. The pin outranks
+review-role profiles and survives config edits, retries and recovery.
+Omit flags to reattach; a different selection cannot change an active run.
+
+The calling agent drives AXI approval gates but does not become the pipeline
+agent. The daemon requires a supported native agent binary, the `agent: cursor`
+or `agent: devin` ACP alias, or an explicit `acp:<target>` through `acpx`, and
+fails before the first step when none can run.
+
+Commit post-pipeline follow-up work on top of the existing branch so every pipeline fix commit remains present. Never abort-and-restart, reset, or replace the branch in a way that drops prior gate-fix commits.
+
+Usage:
+  no-mistakes-slim axi run [flags]
+
+Flags:
+      --base-branch string             integration branch to open the PR against for this run only (overrides pr.base_branch)
+      --closes stringArray             GitHub issue this PR closes when merged; repeat for multiple issues (42 or owner/repo#42)
+      --effort string                  Pi reasoning effort to pin: minimal, low, medium, high, xhigh, max (overrides agent_config.pi.effort)
+  -h, --help                           help for run
+      --intent string                  what the user set out to accomplish; '-' reads stdin to EOF (exclusive with --intent-file)
+      --intent-file string             read intent from this file, relative to the current directory (exclusive with --intent)
+      --launch-nonce string            opaque nonce for a daemon-bound pre-drive launch receipt
+      --model string                   exact Pi provider/model ID to pin for a new run (overrides agent_config.pi.model)
+      --no-publish-intent              keep the generated Intent section out of the PR body for this run (tighten-only; full intent still reaches every step prompt except PR drafting)
+      --skip string                    comma-separated pipeline steps to skip
+      --validation-generation string   opaque generation bound to --launch-nonce proof mode
+      --verification-plan string       capture a nonempty UTF-8 verification plan as separate run evidence (new runs only)
+      --wait duration                  maximum time to block driving this run before returning so the caller can reattach (default 8m0s)
+  -y, --yes axi answer                 auto-resolve eligible gates (fix findings, then accept) until a decision point or outcome; protected-path and Test unvalidated-work refusals require an explicit response, and an open review question requires axi answer
+
+$ no-mistakes-slim axi respond --help
+Sends approve/fix/skip for the step currently awaiting approval, then
+blocks until the next gate, CI-ready decision point, or final outcome.
+
+With --action fix, declines are explicit: every finding the gate shows must
+be listed in --findings or --ignore, or the response is refused and the gate
+stays parked. A finding an earlier round of the same step already decided may
+be omitted to keep that decision, and naming one that round chose to fix in
+--ignore is refused too: reverting an applied fix is out of scope for a gate
+response. The recorded dispositions (fixed, ignored, kept) are echoed in the
+output.
+
+--wait bounds this hold (default 8m) so an agent harness with a 10-minute
+tool cap gets a structured return instead of an unbounded hang. Elapsed wait
+is not a failed run: inspect with axi status and reattach. A slow live daemon
+is retried after a health probe rather than reported as I/O failure.
+
+Commit post-pipeline follow-up work on top of the existing branch so every pipeline fix commit remains present. Never abort-and-restart, reset, or replace the branch in a way that drops prior gate-fix commits.
+
+Usage:
+  no-mistakes-slim axi respond [flags]
+
+Flags:
+      --action string         approve | fix | skip (required)
+      --add-finding string    JSON finding object to add and fix (with --action fix)
+      --findings string       comma-separated finding IDs to fix (with --action fix)
+  -h, --help                  help for respond
+      --ignore string         comma-separated finding IDs to decline (with --action fix); every finding the gate shows must be in --findings or --ignore unless an earlier round of this step already decided it, and a finding that round chose to fix cannot be declined
+      --instructions string   guidance applied to the selected findings (with --action fix)
+      --reason string         exception reason preserved with Test approval (with --action approve)
+      --step string           step to respond to (default: the step awaiting approval)
+      --wait duration         maximum time to block driving this run before returning so the caller can reattach (default 8m0s)
+  -y, --yes axi answer        auto-resolve subsequent eligible gates until a decision point or outcome; protected-path and Test unvalidated-work refusals require an explicit response, and an open review question requires axi answer
+
+$ no-mistakes-slim axi status --help
+Show a current-branch or explicitly selected run in detail
+
+Usage:
+  no-mistakes-slim axi status [flags]
+
+Flags:
+  -h, --help         help for status
+      --run string   inspect a specific run ID (default: current branch's active or most recent)
+

@@ -1,0 +1,25 @@
+Registered project modes from an isolated FM_HOME:
+legacy: no-mistakes off
+fullproj: no-mistakes off
+slimproj: no-mistakes-slim off
+
+Task-level override: a task selects slim while its project default is no-mistakes.
+scaffolded: /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-slim/brief.md (ship, mode=no-mistakes-slim; replace {TASK} and {FIRSTMATE_SPEC})
+
+Ordinary no-mistakes brief remains selectable.
+scaffolded: /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-full/brief.md (ship, mode=no-mistakes; replace {TASK} and {FIRSTMATE_SPEC})
+
+Generated delivery contracts:
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-full/brief.md:78:# Definition of done
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-full/brief.md:79:Delivery contract: mode=no-mistakes
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-full/brief.md:85:Follow the guidance no-mistakes itself provides for the mechanics: it loads when you invoke /no-mistakes, and `no-mistakes axi run --help` plus the `help` lines in each `axi` response are authoritative and version-matched to the installed binary.
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-full/brief.md:104:- NEVER pass `--yes` (or `-y`) to `no-mistakes axi run` or `no-mistakes axi respond`. It is banned fleet-wide.
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-slim/brief.md:54:   Before you append `blocked:` about the slim pipeline, run `no-mistakes-slim daemon status` and `no-mistakes-slim axi status`.
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-slim/brief.md:70:# Definition of done
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-slim/brief.md:71:Delivery contract: mode=no-mistakes-slim
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-slim/brief.md:77:Follow the guidance no-mistakes-slim itself provides for the mechanics: it loads when you invoke /no-mistakes-slim, and `no-mistakes-slim axi run --help` plus the `help` lines in each `axi` response are authoritative and version-matched to the installed binary.
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-slim/brief.md:87:So background the drive call and poll `no-mistakes-slim axi status` from a separate call instead of sitting in one blocking hold your harness will kill.
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-slim/brief.md:95:  When the decision comes back, feed it to the gate with `no-mistakes-slim axi respond` and let the pipeline apply it - do not route the question to "the user" or implement the fix yourself.
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-slim/brief.md:96:- NEVER pass `--yes` (or `-y`) to `no-mistakes-slim axi run` or `no-mistakes-slim axi respond`. It is banned fleet-wide.
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-slim/brief.md:101:Before starting validation, run `no-mistakes-slim status` in this task worktree.
+/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-testphase-20261008/fm-home/data/live-slim/brief.md:102:Only if it reports `repo not initialized`, run `no-mistakes-slim init` in this same task worktree.

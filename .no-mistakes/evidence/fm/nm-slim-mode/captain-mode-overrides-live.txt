@@ -1,0 +1,5 @@
+$ captain overrides full project posture with --mode no-mistakes-slim
+scaffolded: /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-captain-override/data/override-to-slim/brief.md (ship, mode=no-mistakes-slim; replace {TASK} and {FIRSTMATE_SPEC})
+
+$ captain overrides slim project posture with --mode no-mistakes
+scaffolded: /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-captain-override/data/override-to-full/brief.md (ship, mode=no-mistakes; replace {TASK} and {FIRSTMATE_SPEC})

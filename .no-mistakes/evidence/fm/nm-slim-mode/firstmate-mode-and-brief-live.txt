@@ -1,0 +1,11 @@
+$ fm-project-mode.sh for legacy, slim, full, conditional
+legacy: no-mistakes off
+slimproj: no-mistakes-slim off
+fullproj: no-mistakes off
+policyproj: no-mistakes off
+
+$ fm-brief.sh task-slim --mode no-mistakes-slim
+scaffolded: /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/data/task-slim/brief.md (ship, mode=no-mistakes-slim; replace {TASK} and {FIRSTMATE_SPEC})
+
+$ fm-brief.sh task-full --mode no-mistakes
+scaffolded: /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/data/task-full/brief.md (ship, mode=no-mistakes; replace {TASK} and {FIRSTMATE_SPEC})

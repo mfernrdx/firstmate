@@ -1,0 +1,18 @@
+Read-only status probes using HOME and XDG directories inside the worktree.
+Working directory: /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2
+$ no-mistakes-slim status
+repo not initialized (run 'no-mistakes-slim init' first)
+exit=0
+$ no-mistakes-slim daemon status
+  ● daemon running (pid 399)
+exit=0
+$ no-mistakes status
+repo not initialized (run 'no-mistakes init' first)
+[33mA new version of no-mistakes is available: v1.79.0 -> v1.84.0
+Run "no-mistakes update" to update[0m
+exit=0
+$ no-mistakes daemon status
+  ● daemon running (pid 399)
+[33mA new version of no-mistakes is available: v1.79.0 -> v1.84.0
+Run "no-mistakes update" to update[0m
+exit=0

@@ -1,0 +1,449 @@
++ set -u
++++ dirname bin/fm-crew-state.sh
+++ cd bin
+++ pwd
++ SCRIPT_DIR=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin
+++ cd /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/..
+++ pwd
++ FM_ROOT=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2
++ FM_HOME=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home
++ STATE=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state
++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-tmux-lib.sh
++++ dirname -- /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-tmux-lib.sh
+++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-composer-lib.sh
++++ FM_COMPOSER_UNICODE_SPACES=()
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0302\0205'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0302\0240'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0341\0232\0200'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0200'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0201'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0202'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0203'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0204'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0205'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0206'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0207'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0210'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0211'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0212'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0250'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0251'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0257'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0342\0201\0237'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++ printf -v _fm_composer_space_utf8 %b '\0343\0200\0200'
++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++ unset -v _fm_composer_space_octal _fm_composer_space_utf8
++++ FM_DELIVERY_BUSY_REGEX_DEFAULT='esc (to )?interrupt|Working(\.\.\.|…)|Ctrl\+c:cancel|ctrl\+c to stop|esc[[:space:]]+to[[:space:]]+cancel'
++++ FM_DELIVERY_CLAUDE_BUSY_REGEX_DEFAULT='esc to interrupt|…[[:space:]]+\([0-9]+[smh]'
++++ FM_DELIVERY_CODEX_BUSY_REGEX_DEFAULT='esc to interrupt'
++++ FM_DELIVERY_OPENCODE_BUSY_REGEX_DEFAULT='esc interrupt'
++++ FM_DELIVERY_PI_BUSY_REGEX_DEFAULT='Working\.\.\.'
++++ FM_OMP_SPINNER_FRAMES_RE='(⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏|⣾|⣽|⣻|⢿|⡿|⣟|⣯|⣷)'
++++ FM_DELIVERY_OMP_BUSY_REGEX_DEFAULT='Working…|^[[:space:]]*(⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏|⣾|⣽|⣻|⢿|⡿|⣟|⣯|⣷)[[:space:]]+[0-9]+[smh]'
++++ FM_DELIVERY_GROK_BUSY_REGEX_DEFAULT='Ctrl\+c:cancel'
++++ FM_DELIVERY_CURSOR_BUSY_REGEX_DEFAULT='ctrl\+c to stop'
++++ FM_DELIVERY_AGY_BUSY_REGEX_DEFAULT='esc[[:space:]]+to[[:space:]]+cancel'
++++ FM_DELIVERY_KIMI_BUSY_REGEX_DEFAULT='^[[:space:]]*(🌑|🌒|🌓|🌔|🌕|🌖|🌗|🌘)[[:space:]]+·[[:space:]]+'
+++++ printf '%s\n' ❯ › ⟩ →
++++ FM_COMPOSER_AGENT_PROMPT_GLYPHS='❯
+›
+⟩
+→'
+++++ printf '%s\n' '>' '$' % '#'
++++ FM_COMPOSER_SHELL_PROMPT_GLYPHS='>
+$
+%
+#'
++++ FM_COMPOSER_IDLE_RE_DEFAULT='^Type a message\.\.\.$|^Ask anything\.\.\.|^Plan, search, build anything$|^Add a follow-up$'
++++ FM_COMPOSER_LEFTBAR_FOOTER_RE_DEFAULT='^(Build|Plan)[[:space:]]+·[[:space:]]+'
++++ FM_COMPOSER_OMP_STATUS_RE_DEFAULT='^[[:space:]]*(π|󰵗)[[:space:]]+·[[:space:]]|^[[:space:]]*(⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏|⣾|⣽|⣻|⢿|⡿|⣟|⣯|⣷)[[:space:]]+[0-9]+[smh]([[:space:]]|$)|[[:space:]]·[[:space:]].*[0-9]+(\.[0-9]+)?%/[0-9]+K'
++++ FM_COMPOSER_CAPTURE_LINES=20
++++ FM_COMPOSER_PI_MAX_LINES=8
++++ dirname -- /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-tmux-lib.sh
+++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-cursor-lib.sh
++++ FM_CURSOR_PROBE_TIMEOUT=10
++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-backend.sh
+++ FM_BACKEND_SCRIPT=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-backend.sh
+++++ dirname /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-backend.sh
++++ cd /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin
++++ pwd
+++ FM_BACKEND_LIB_DIR=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin
+++ unset FM_BACKEND_SCRIPT
++++ cd /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/..
++++ pwd
+++ FM_BACKEND_DEFAULT_ROOT=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2
+++ FM_ROOT=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2
+++ FM_HOME=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home
+++ FM_BACKEND_CONFIG_DIR=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/config
+++ FM_BACKEND_KNOWN='tmux herdr zellij orca cmux'
+++ FM_BACKEND_SPAWN='tmux herdr zellij orca cmux'
+++ FM_BACKEND_CMUX_BUNDLE_ID=com.cmuxterm.app
++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-classify-lib.sh
+++++ dirname /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-classify-lib.sh
++++ cd /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin
++++ pwd
+++ _FM_CLASSIFY_LIB_DIR=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin
+++ FM_CREW_STATE_BIN=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-crew-state.sh
+++ case $- in
+++ _fm_classify_nounset=on
+++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-timeout-lib.sh
++++ set -u
+++ '[' on = on ']'
+++ unset _fm_classify_nounset
+++ FM_CLASSIFY_CAPTAIN_RE_DEFAULT='done:|needs-decision:|blocked:|failed:|PR ready|checks green|ready in branch|merged'
+++ FM_CLASSIFY_PAUSED_VERB_DEFAULT=paused
+++ FM_PAUSE_RESURFACE_SECS_DEFAULT=14400
+++ FM_CLASSIFY_RESOLVE_VERB_DEFAULT=resolved
+++ FM_CLASSIFY_CAPTAIN_HELD_VERB_DEFAULT=captain-held
+++ FM_CLASSIFY_RESERVED_KEY_PREFIXES_DEFAULT=pending-reply-
+++ FM_OPEN_DECISIONS_FOLD_VERSION=5
+++ FM_STATUS_SNAPSHOT_EVENT_LINE=
+++ FM_STATUS_SNAPSHOT_EVENT_MTIME=
+++ FM_STATUS_SNAPSHOT_EVENT_ENDPOINT=
+++ STATUS_PRESENTATION_REPORTED=
+++ STATUS_PRESENTATION_CLASSIFIED=
+++ FM_WORKTREE_WRITE_PRUNE='.git node_modules .venv venv __pycache__ .mypy_cache .pytest_cache .ruff_cache .tox target dist build .next .cache vendor'
+++ FM_WORKTREE_WRITE_MAXDEPTH=6
+++ FM_WORKTREE_WRITE_TIMEOUT=10
++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-busy-lib.sh
+++ FM_BUSY_LIB_VERSION=v1
+++ FM_BUSY_KIMI_VERIFIED_VERSIONS=
++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-nm-run-lib.sh
++ ID=live-slim-check
++ '[' -n live-slim-check ']'
++ META=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta
++ LOG=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.status
++ NM_TIMEOUT=10
++ case "$NM_TIMEOUT" in
++ FM_CREW_STATE_RUNS_LIMIT=200
++ case "$FM_CREW_STATE_RUNS_LIMIT" in
++ SEP=' · '
++ '[' -f /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta ']'
+++ meta_value worktree
+++ grep '^worktree=' /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta
+++ tail -1
+++ cut -d= -f2-
++ WT=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task
+++ meta_value kind
+++ grep '^kind=' /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta
+++ tail -1
+++ cut -d= -f2-
++ KIND=ship
+++ meta_value mode
+++ grep '^mode=' /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta
+++ tail -1
+++ cut -d= -f2-
++ MODE=no-mistakes-slim
+++ meta_value harness
+++ grep '^harness=' /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta
+++ tail -1
+++ cut -d= -f2-
++ HARNESS=claude
+++ meta_value remote_host
+++ grep '^remote_host=' /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta
+++ tail -1
+++ cut -d= -f2-
++ REMOTE_HOST=
++ '[' -n ship ']'
++ PIPELINE_CMD=no-mistakes
++ '[' no-mistakes-slim = no-mistakes-slim ']'
++ PIPELINE_CMD=no-mistakes-slim
++ '[' -z '' ']'
++ '[' -z /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task ']'
++ '[' '!' -d /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task ']'
+++ log_last_line
+++ '[' -f /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.status ']'
+++ return 1
+++ true
++ LOG_LINE=
+++ status_line_verb ''
+++ local v= out= word
+++ v=
+++ v=
+++ v=
+++ case "$v" in
+++ printf %s ''
+++ return 0
++ LOG_VERB=
++ '[' -n '' ']'
+++ fm_backend_of_meta /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta
+++ local v
++++ fm_meta_get /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta backend
++++ local meta=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta key=backend line value=
++++ '[' -f /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta ']'
++++ printf %s tmux
+++ v=tmux
+++ printf %s tmux
++ TASK_BACKEND=tmux
+++ fm_backend_target_of_meta /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta
+++ local meta=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta backend terminal window
++++ fm_backend_of_meta /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta
++++ local v
+++++ fm_meta_get /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta backend
+++++ local meta=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta key=backend line value=
+++++ '[' -f /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta ']'
+++++ printf %s tmux
++++ v=tmux
++++ printf %s tmux
+++ backend=tmux
+++ '[' tmux = orca ']'
++++ fm_meta_get /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta window
++++ local meta=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta key=window line value=
++++ '[' -f /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/state/live-slim-check.meta ']'
++++ printf %s validation:fm-live-slim-check
+++ window=validation:fm-live-slim-check
+++ '[' -n validation:fm-live-slim-check ']'
+++ printf %s validation:fm-live-slim-check
++ BACKEND_TARGET=validation:fm-live-slim-check
++ EXPECTED_LABEL=fm-live-slim-check
++ RUN_OUT=
+++ git -C /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task symbolic-ref --quiet --short HEAD
++ CREW_BRANCH=fm/live-slim-check
++ HAVE_RUN=0
++ RUN_SOURCE=full
++ COARSE_STATUS=
++ '[' ship = ship ']'
++ '[' -n fm/live-slim-check ']'
++ command -v no-mistakes-slim
+++ nm_run axi status
+++ fm_nm_run_with_tool no-mistakes-slim /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task 10 axi status
+++ fm_nm_run_with_tool_checked no-mistakes-slim /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task 10 axi status
+++ fm_nm_run_with_tool_bounded no-mistakes-slim /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task 10 axi status
+++ true
++ RUN_OUT='error: repo not initialized (run '\''no-mistakes-slim init'\'' first)
+help[1]: Run `no-mistakes-slim init` to set up the gate in this repository'
++ '[' -n 'error: repo not initialized (run '\''no-mistakes-slim init'\'' first)
+help[1]: Run `no-mistakes-slim init` to set up the gate in this repository' ']'
++++ nm_field branch
++++ fm_nm_field 'error: repo not initialized (run '\''no-mistakes-slim init'\'' first)
+help[1]: Run `no-mistakes-slim init` to set up the gate in this repository' branch
++++ printf '%s\n' 'error: repo not initialized (run '\''no-mistakes-slim init'\'' first)
+help[1]: Run `no-mistakes-slim init` to set up the gate in this repository'
++++ sed -n 's/^[[:space:]]*branch:[[:space:]]*\(.*\)/\1/p'
++++ head -1
+++ strip_quotes ''
+++ fm_nm_strip_quotes ''
+++ local s
++++ fm_nm_trim ''
++++ local s=
++++ s=
++++ s=
++++ printf %s ''
+++ s=
+++ case "$s" in
+++ fm_nm_trim ''
+++ local s=
+++ s=
+++ s=
+++ printf %s ''
++ run_branch=
++ '[' -n '' ']'
++++ nm_runs_list
++++ nm_run runs --limit 200
++++ fm_nm_run_with_tool no-mistakes-slim /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task 10 runs --limit 200
++++ fm_nm_run_with_tool_checked no-mistakes-slim /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task 10 runs --limit 200
++++ fm_nm_run_with_tool_bounded no-mistakes-slim /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task 10 runs --limit 200
++++ true
+++ fm_nm_runs_status_for_worktree /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task fm/live-slim-check ''
+++ local wt=/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task branch=fm/live-slim-check list= expected_head=
+++ local local_full row_full row st br sha day clock pr extra year_num month_num day_num max_day pending_st=
+++ local decided= decided_exact=
++++ git -C /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-nmslim-home/task rev-parse HEAD
+++ local_full=4889301ed8cfa2750453cdf64c8bf2b6d6580026
+++ '[' -n '' ']'
+++ return 0
++ COARSE_STATUS=
++ '[' -n '' ']'
++ '[' 0 = 1 ']'
++ '[' -n validation:fm-live-slim-check ']'
++ pane_readable validation:fm-live-slim-check
++ case "$TASK_BACKEND" in
++ tmux display-message -p -t validation:fm-live-slim-check '#{pane_id}'
++ case "$TASK_BACKEND" in
+++ fm_backend_agent_state tmux validation:fm-live-slim-check
+++ local backend=tmux target=validation:fm-live-slim-check
+++ fm_backend_source tmux
+++ local name=tmux
+++ fm_backend_validate tmux
+++ local name=tmux
+++ fm_backend_is_known tmux
+++ fm_backend_list_contains 'tmux herdr zellij orca cmux' tmux
+++ local 'list=tmux herdr zellij orca cmux' name=tmux
+++ case "$name" in
+++ case " $list " in
+++ return 0
+++ return 0
+++ case "$name" in
+++ '[' -z '' ']'
+++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/backends/tmux.sh
++++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-tmux-lib.sh
++++++ dirname -- /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-tmux-lib.sh
+++++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-composer-lib.sh
++++++ FM_COMPOSER_UNICODE_SPACES=()
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0302\0205'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0302\0240'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0341\0232\0200'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0200'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0201'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0202'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0203'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0204'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0205'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0206'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0207'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0210'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0211'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0212'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0250'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0251'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0200\0257'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0342\0201\0237'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ for _fm_composer_space_octal in '\0302\0205' '\0302\0240' '\0341\0232\0200' '\0342\0200\0200' '\0342\0200\0201' '\0342\0200\0202' '\0342\0200\0203' '\0342\0200\0204' '\0342\0200\0205' '\0342\0200\0206' '\0342\0200\0207' '\0342\0200\0210' '\0342\0200\0211' '\0342\0200\0212' '\0342\0200\0250' '\0342\0200\0251' '\0342\0200\0257' '\0342\0201\0237' '\0343\0200\0200'
++++++ printf -v _fm_composer_space_utf8 %b '\0343\0200\0200'
++++++ FM_COMPOSER_UNICODE_SPACES+=("$_fm_composer_space_utf8")
++++++ unset -v _fm_composer_space_octal _fm_composer_space_utf8
++++++ FM_DELIVERY_BUSY_REGEX_DEFAULT='esc (to )?interrupt|Working(\.\.\.|…)|Ctrl\+c:cancel|ctrl\+c to stop|esc[[:space:]]+to[[:space:]]+cancel'
++++++ FM_DELIVERY_CLAUDE_BUSY_REGEX_DEFAULT='esc to interrupt|…[[:space:]]+\([0-9]+[smh]'
++++++ FM_DELIVERY_CODEX_BUSY_REGEX_DEFAULT='esc to interrupt'
++++++ FM_DELIVERY_OPENCODE_BUSY_REGEX_DEFAULT='esc interrupt'
++++++ FM_DELIVERY_PI_BUSY_REGEX_DEFAULT='Working\.\.\.'
++++++ FM_OMP_SPINNER_FRAMES_RE='(⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏|⣾|⣽|⣻|⢿|⡿|⣟|⣯|⣷)'
++++++ FM_DELIVERY_OMP_BUSY_REGEX_DEFAULT='Working…|^[[:space:]]*(⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏|⣾|⣽|⣻|⢿|⡿|⣟|⣯|⣷)[[:space:]]+[0-9]+[smh]'
++++++ FM_DELIVERY_GROK_BUSY_REGEX_DEFAULT='Ctrl\+c:cancel'
++++++ FM_DELIVERY_CURSOR_BUSY_REGEX_DEFAULT='ctrl\+c to stop'
++++++ FM_DELIVERY_AGY_BUSY_REGEX_DEFAULT='esc[[:space:]]+to[[:space:]]+cancel'
++++++ FM_DELIVERY_KIMI_BUSY_REGEX_DEFAULT='^[[:space:]]*(🌑|🌒|🌓|🌔|🌕|🌖|🌗|🌘)[[:space:]]+·[[:space:]]+'
+++++++ printf '%s\n' ❯ › ⟩ →
++++++ FM_COMPOSER_AGENT_PROMPT_GLYPHS='❯
+›
+⟩
+→'
+++++++ printf '%s\n' '>' '$' % '#'
++++++ FM_COMPOSER_SHELL_PROMPT_GLYPHS='>
+$
+%
+#'
++++++ FM_COMPOSER_IDLE_RE_DEFAULT='^Type a message\.\.\.$|^Ask anything\.\.\.|^Plan, search, build anything$|^Add a follow-up$'
++++++ FM_COMPOSER_LEFTBAR_FOOTER_RE_DEFAULT='^(Build|Plan)[[:space:]]+·[[:space:]]+'
++++++ FM_COMPOSER_OMP_STATUS_RE_DEFAULT='^[[:space:]]*(π|󰵗)[[:space:]]+·[[:space:]]|^[[:space:]]*(⠋|⠙|⠹|⠸|⠼|⠴|⠦|⠧|⠇|⠏|⣾|⣽|⣻|⢿|⡿|⣟|⣯|⣷)[[:space:]]+[0-9]+[smh]([[:space:]]|$)|[[:space:]]·[[:space:]].*[0-9]+(\.[0-9]+)?%/[0-9]+K'
++++++ FM_COMPOSER_CAPTURE_LINES=20
++++++ FM_COMPOSER_PI_MAX_LINES=8
++++++ dirname -- /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-tmux-lib.sh
+++++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-cursor-lib.sh
++++++ FM_CURSOR_PROBE_TIMEOUT=10
++++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-session-lock-lib.sh
++++++ dirname -- /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-session-lock-lib.sh
+++++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-cursor-lib.sh
++++++ FM_CURSOR_PROBE_TIMEOUT=10
+++++ FM_HARNESS_RE='claude|codex|opencode|grok|kimi|^pi$|^pi-signed$|^omp$'
+++++ FM_HARNESS_NAMES=(claude codex opencode grok kimi pi-signed pi omp)
+++++ FM_HARNESS_IS_CLAUDE=0
++++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-agent-process-lib.sh
++++++ dirname -- /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-agent-process-lib.sh
+++++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-session-lock-lib.sh
+++++++ dirname -- /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-session-lock-lib.sh
++++++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-cursor-lib.sh
+++++++ FM_CURSOR_PROBE_TIMEOUT=10
++++++ FM_HARNESS_RE='claude|codex|opencode|grok|kimi|^pi$|^pi-signed$|^omp$'
++++++ FM_HARNESS_NAMES=(claude codex opencode grok kimi pi-signed pi omp)
++++++ FM_HARNESS_IS_CLAUDE=0
++++++ dirname -- /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-agent-process-lib.sh
+++++ . /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/bin/fm-gemini-lib.sh
+++ _FM_BACKEND_TMUX_SOURCED=1
+++ case "$backend" in
+++ fm_backend_tmux_agent_state validation:fm-live-slim-check
+++ local target=validation:fm-live-slim-check comm session window windows inventory_status
+++ local foreground argv0s name pid fg_seen=0 fg_shell=0 fg_other=0
+++ case "$target" in
+++ session=validation
+++ window=fm-live-slim-check
++++ LC_ALL=C
++++ tmux list-windows -t validation -F '#{window_name}'
+++ windows='error connecting to /tmp/tmux-1000/default (No such file or directory)'
+++ inventory_status=1
+++ '[' 1 -ne 0 ']'
+++ case "$windows" in
+++ printf missing
+++ return 0
++ AGENT_STATE=missing
++ case "$TASK_BACKEND:$AGENT_STATE" in
++ emit unknown none 'backend target gone: validation:fm-live-slim-check'
++ local 'line=state: unknown · source: none'
++ '[' -n 'backend target gone: validation:fm-live-slim-check' ']'
++ line='state: unknown · source: none · backend target gone: validation:fm-live-slim-check'
++ printf '%s\n' 'state: unknown · source: none · backend target gone: validation:fm-live-slim-check'
+state: unknown · source: none · backend target gone: validation:fm-live-slim-check
++ exit 0

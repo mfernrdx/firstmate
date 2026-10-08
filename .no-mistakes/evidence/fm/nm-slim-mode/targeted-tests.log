@@ -1,0 +1,5 @@
+tests/fm-brief.test.sh exit=0
+tests/fm-task-delivery.test.sh exit=0
+tests/fm-crew-state.test.sh exit=0
+tests/fm-teardown.test.sh exit=0
+tests/fm-secondmate-safety.test.sh exit=0

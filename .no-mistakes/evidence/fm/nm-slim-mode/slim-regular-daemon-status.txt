@@ -1,0 +1,13 @@
+$ no-mistakes-slim daemon status
+  ● daemon running (pid 399)
+exit=0
+
+$ no-mistakes daemon status
+[33mA new version of no-mistakes is available: v1.79.0 -> v1.84.0
+Run "no-mistakes update" to update[0m
+  ● daemon running (pid 399)
+exit=0
+
+$ no-mistakes-slim daemon status with HOME/XDG redirected into worktree
+  ● daemon running (pid 399)
+exit=0

@@ -1,0 +1,3 @@
+exit=1
+error: --mode must be one of no-mistakes, no-mistakes-slim, direct-PR, local-only (got 'unsupported')
+brief_created=no

@@ -1,0 +1,51 @@
+slim_version: no-mistakes-slim version v1.90.0-7-g61164ec-fork-slim (61164ec) 2026-10-08T08:26:06Z
+
+slim_status:
+error: repo not initialized (run 'no-mistakes-slim init' first)
+help[1]: Run `no-mistakes-slim init` to set up the gate in this repository
+
+slim_daemon:
+  ● daemon running (pid 399)
+
+regular_version: no-mistakes version v1.79.0 (fc540ac) 2026-09-19T09:34:32Z
+
+regular_daemon:
+  ● daemon running (pid 399)
+
+slim_doctor_with_isolated_HOME_XDG:
+  System
+  ✓ git             git version 2.43.0
+  ✓ gh              ok
+  – az              not found (optional, needed for Azure DevOps PR/CI)
+  ✓ data directory  /home/michael/.no-mistakes
+  ✓ database        ok
+  ✓ daemon          running
+
+  Agents
+  ✓ claude          /home/michael/.local/bin/claude
+  ✓ codex           /home/michael/.nvm/versions/node/v24.18.0/bin/codex
+  – grok            not found
+  – rovodev         not found
+  ✓ opencode        /home/michael/.nvm/versions/node/v24.18.0/bin/opencode
+  – pi              not found
+  – copilot         not found
+  – antigravity     not found
+  – acpx            not found
+  – cursor          not found (cursor-agent, acpx)
+  – devin           not found (devin, acpx)
+  ✓ gate validation  codex is runnable
+
+slim_init_help:
+Sets up or refreshes a local bare repo as a gate, installs a post-receive hook,
+best-effort isolates the gate hook path from shared local git config writes when Git supports `config --worktree`,
+adds or repairs the "no-mistakes" git remote, and records the repo in the database.
+
+Run this from inside a git repository that has an "origin" remote.
+
+Usage:
+  no-mistakes-slim init [flags]
+
+Flags:
+      --fork-url string        GitHub fork remote URL to push branches to while opening PRs against origin
+  -h, --help                   help for init
+      --worktree-root string   Directory to create this repository's run worktrees in, so directory-scoped toolchain config (mise, direnv) reaches them; prints the worktree_roots entry to add to the global config

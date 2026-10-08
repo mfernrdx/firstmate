@@ -1,0 +1,49 @@
+Live bin/fm-project-mode.sh and bin/fm-brief.sh calls with a scratch FM_HOME and disposable registry fixture.
+
+$ bin/fm-project-mode.sh legacy
+no-mistakes off
+exit=0
+
+$ bin/fm-project-mode.sh full
+no-mistakes off
+exit=0
+
+$ bin/fm-project-mode.sh slim
+no-mistakes-slim off
+exit=0
+
+$ bin/fm-project-mode.sh direct
+direct-PR off
+exit=0
+
+$ bin/fm-project-mode.sh local
+local-only off
+exit=0
+
+$ bin/fm-project-mode.sh conditional
+no-mistakes off
+exit=0
+
+$ bin/fm-brief.sh live-full-override-a1 direct --mode no-mistakes
+scaffolded: /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-modes-804717/home/data/live-full-override-a1/brief.md (ship, mode=no-mistakes; replace {TASK} and {FIRSTMATE_SPEC})
+exit=0
+
+Delivery contract: mode=no-mistakes
+
+$ bin/fm-brief.sh live-slim-override-a2 direct --mode no-mistakes-slim
+scaffolded: /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-modes-804717/home/data/live-slim-override-a2/brief.md (ship, mode=no-mistakes-slim; replace {TASK} and {FIRSTMATE_SPEC})
+exit=0
+
+Delivery contract: mode=no-mistakes-slim
+
+$ bin/fm-brief.sh live-direct-override-a3 slim --mode direct-PR
+scaffolded: /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-modes-804717/home/data/live-direct-override-a3/brief.md (ship, mode=direct-PR; replace {TASK} and {FIRSTMATE_SPEC})
+exit=0
+
+Delivery contract: mode=direct-PR
+
+$ bin/fm-brief.sh live-local-override-a4 slim --mode local-only
+scaffolded: /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4E536ZY4G6SR7SQ58EH72M2/.validation-live-modes-804717/home/data/live-local-override-a4/brief.md (ship, mode=local-only; replace {TASK} and {FIRSTMATE_SPEC})
+exit=0
+
+Delivery contract: mode=local-only
