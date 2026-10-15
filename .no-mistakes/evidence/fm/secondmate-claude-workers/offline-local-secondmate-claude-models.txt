@@ -1,0 +1,31 @@
+# Offline local-secondmate Claude worker launches
+
+model=sonnet
+spawned offline-claude-sonnet harness=claude kind=scout window=firstmate:fm-offline-claude-sonnet worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/sonnet/home/projects/.treehouse/fixture-r1/1/fixture
+Treehouse request: treehouse --root '/tmp/offline-local-secondmate-claude-models.E6j8Zg/sonnet/home/projects' get
+Claude launch: env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUDE_CODE_SEND_FEEDBACK=0 claude --dangerously-skip-permissions --settings '{"feedbackDrafts":"off","attribution":{"commit":"","pr":"","sessionUrl":false}}' --model 'sonnet' --effort 'high' "$('/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4YNBPYF3W4E8XH139K1034X/bin/fm-operational-input.sh' encode launch-brief < '/tmp/offline-local-secondmate-claude-models.E6j8Zg/sonnet/home/data/offline-claude-sonnet/launch-brief.md')"
+metadata: worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/sonnet/home/projects/.treehouse/fixture-r1/1/fixture harness=claude model=sonnet effort=high 
+Claude trust store registered worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/sonnet/home/projects/.treehouse/fixture-r1/1/fixture
+
+model=fable
+spawned offline-claude-fable harness=claude kind=scout window=firstmate:fm-offline-claude-fable worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/fable/home/projects/.treehouse/fixture-r1/1/fixture
+Treehouse request: treehouse --root '/tmp/offline-local-secondmate-claude-models.E6j8Zg/fable/home/projects' get
+Claude launch: env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUDE_CODE_SEND_FEEDBACK=0 claude --dangerously-skip-permissions --settings '{"feedbackDrafts":"off","attribution":{"commit":"","pr":"","sessionUrl":false}}' --model 'fable' --effort 'high' "$('/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4YNBPYF3W4E8XH139K1034X/bin/fm-operational-input.sh' encode launch-brief < '/tmp/offline-local-secondmate-claude-models.E6j8Zg/fable/home/data/offline-claude-fable/launch-brief.md')"
+metadata: worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/fable/home/projects/.treehouse/fixture-r1/1/fixture harness=claude model=fable effort=high 
+Claude trust store registered worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/fable/home/projects/.treehouse/fixture-r1/1/fixture
+
+model=opus
+spawned offline-claude-opus harness=claude kind=scout window=firstmate:fm-offline-claude-opus worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/opus/home/projects/.treehouse/fixture-r1/1/fixture
+Treehouse request: treehouse --root '/tmp/offline-local-secondmate-claude-models.E6j8Zg/opus/home/projects' get
+Claude launch: env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUDE_CODE_SEND_FEEDBACK=0 claude --dangerously-skip-permissions --settings '{"feedbackDrafts":"off","attribution":{"commit":"","pr":"","sessionUrl":false}}' --model 'opus' --effort 'high' "$('/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4YNBPYF3W4E8XH139K1034X/bin/fm-operational-input.sh' encode launch-brief < '/tmp/offline-local-secondmate-claude-models.E6j8Zg/opus/home/data/offline-claude-opus/launch-brief.md')"
+metadata: worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/opus/home/projects/.treehouse/fixture-r1/1/fixture harness=claude model=opus effort=high 
+Claude trust store registered worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/opus/home/projects/.treehouse/fixture-r1/1/fixture
+
+model=haiku
+spawned offline-claude-haiku harness=claude kind=scout window=firstmate:fm-offline-claude-haiku worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/haiku/home/projects/.treehouse/fixture-r1/1/fixture
+Treehouse request: treehouse --root '/tmp/offline-local-secondmate-claude-models.E6j8Zg/haiku/home/projects' get
+Claude launch: env -u CURSOR_AGENT -u CURSOR_INVOKED_AS -u GEMINI_CLI CLAUDE_CODE_ENABLE_PROMPT_SUGGESTION=false CLAUDE_CODE_SEND_FEEDBACK=0 claude --dangerously-skip-permissions --settings '{"feedbackDrafts":"off","attribution":{"commit":"","pr":"","sessionUrl":false}}' --model 'haiku' --effort 'high' "$('/home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M4YNBPYF3W4E8XH139K1034X/bin/fm-operational-input.sh' encode launch-brief < '/tmp/offline-local-secondmate-claude-models.E6j8Zg/haiku/home/data/offline-claude-haiku/launch-brief.md')"
+metadata: worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/haiku/home/projects/.treehouse/fixture-r1/1/fixture harness=claude model=haiku effort=high 
+Claude trust store registered worktree=/tmp/offline-local-secondmate-claude-models.E6j8Zg/haiku/home/projects/.treehouse/fixture-r1/1/fixture
+
+# all four local-secondmate Claude model cases passed
