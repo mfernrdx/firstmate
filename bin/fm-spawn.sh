@@ -3285,7 +3285,7 @@ if [ "$RELAUNCH" -eq 1 ]; then
 elif [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
   treehouse_get='treehouse get'
   if [ "$(real_path_or_raw "$FM_HOME")" != "$(fm_firstmate_root_home "$FM_HOME")" ]; then
-    treehouse_get="treehouse --root $(shell_quote "$FM_HOME/projects") get"
+    treehouse_get="treehouse --root $(shell_quote "$PROJECTS") get"
   fi
   spawn_send_text_line "$WT_TARGET" "$treehouse_get"
 

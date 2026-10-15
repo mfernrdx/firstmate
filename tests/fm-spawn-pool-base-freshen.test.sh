@@ -59,6 +59,20 @@ run_spawn() {
     "$id" "$PROJECT_DIR" "$@"
 }
 
+run_spawn_with_projects_root() {
+  local id=$1 project=$2 projects_root=$3 spawn_home
+  shift 3
+  spawn_home="$HOME_DIR/user-home"
+  mkdir -p "$spawn_home"
+  FM_ROOT_OVERRIDE='' FM_HOME="$HOME_DIR" HOME="$spawn_home" \
+    CLAUDE_CONFIG_DIR="${FM_TEST_CLAUDE_CONFIG_DIR:-}" \
+    FM_STATE_OVERRIDE="$HOME_DIR/state" FM_DATA_OVERRIDE="$HOME_DIR/data" \
+    FM_PROJECTS_OVERRIDE="$projects_root" FM_CONFIG_OVERRIDE="$HOME_DIR/config" \
+    FM_SPAWN_NO_GUARD=1 FM_FAKE_PANE_PATH="$POOL_DIR" TMUX="${TMUX:-fake,1,0}" \
+    PATH="$FAKEBIN_DIR:$PATH" \
+    "$ROOT/bin/fm-spawn.sh" "$id" "$project" "$@" 2>&1
+}
+
 log_spawn_text_lines() {
   mv "$FAKEBIN_DIR/tmux" "$FAKEBIN_DIR/tmux.orig"
   cat > "$FAKEBIN_DIR/tmux" <<'SH'
@@ -107,7 +121,7 @@ REC
 }
 
 test_treehouse_request_uses_home_root_only_for_local_secondmates() {
-  local rec id out status mate_project mate_pool main_home
+  local rec id out status mate_project mate_pool main_home override_projects override_project override_pool
   local FM_FAKE_TMUX_TEXT_LOG
   id='pool-main-root-r1'; rec=$(make_case main-root "$id"); read_case_record "$rec"
   log_spawn_text_lines; FM_FAKE_TMUX_TEXT_LOG="$CASE_DIR/main-send.log"; export FM_FAKE_TMUX_TEXT_LOG
@@ -132,6 +146,26 @@ test_treehouse_request_uses_home_root_only_for_local_secondmates() {
   grep -Fxq "treehouse --root '$HOME_DIR/projects' get" "$FM_FAKE_TMUX_TEXT_LOG" \
     || fail "secondmate spawn did not select its own Treehouse root"
   pass "Treehouse requests stay default for the main home and use a local secondmate's root"
+
+  id='pool-secondmate-override-root-r1'; rec=$(make_case secondmate-override-root "$id"); read_case_record "$rec"
+  log_spawn_text_lines
+  override_projects="$CASE_DIR/custom-projects"
+  override_project="$override_projects/fixture"
+  override_pool="$override_projects/.treehouse/fixture-r1/1/fixture"
+  mkdir -p "$override_projects"
+  git clone --quiet "$PROJECT_DIR" "$override_project"
+  git -C "$override_project" remote set-url origin "$(git -C "$PROJECT_DIR" remote get-url origin)"
+  mkdir -p "$(dirname "$override_pool")"
+  git -C "$override_project" worktree add --quiet --detach "$override_pool" HEAD
+  main_home="$CASE_DIR/main-home"; mkdir -p "$main_home/state"
+  printf 'schema=fm-secondmate-parent.v1\nroute=local\nparent_home=%s\n' "$main_home" > "$HOME_DIR/.fm-secondmate-parent"
+  PROJECT_DIR=$override_project; POOL_DIR=$override_pool
+  FM_FAKE_TMUX_TEXT_LOG="$CASE_DIR/override-send.log"
+  out=$(run_spawn_with_projects_root "$id" projects/fixture "$override_projects" --scout); status=$?
+  expect_code 0 "$status" "secondmate-home override spawn should succeed"$'\n'"$out"
+  grep -Fxq "treehouse --root '$override_projects' get" "$FM_FAKE_TMUX_TEXT_LOG" \
+    || fail "secondmate spawn did not select its overridden Treehouse root"
+  pass "a local secondmate routes Treehouse through its selected projects root"
 }
 
 test_linked_spawning_home_rejects_primary_before_refresh() {
