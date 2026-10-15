@@ -66,9 +66,6 @@ log_spawn_text_lines() {
 if [ "${1:-}" = send-keys ] && [ "${4:-}" != -l ]; then
   printf '%s\n' "${4:-}" >> "${FM_FAKE_TMUX_TEXT_LOG:?}"
 fi
-if [ -n "${FM_FAKE_TMUX_OPS_LOG:-}" ]; then
-  printf '%s\n' "$*" >> "$FM_FAKE_TMUX_OPS_LOG"
-fi
 exec "${0}.orig" "$@"
 SH
   chmod +x "$FAKEBIN_DIR/tmux"
