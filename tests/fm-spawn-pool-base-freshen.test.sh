@@ -59,6 +59,18 @@ run_spawn() {
     "$id" "$PROJECT_DIR" "$@"
 }
 
+log_spawn_text_lines() {
+  mv "$FAKEBIN_DIR/tmux" "$FAKEBIN_DIR/tmux.orig"
+  cat > "$FAKEBIN_DIR/tmux" <<'SH'
+#!/usr/bin/env bash
+if [ "${1:-}" = send-keys ] && [ "${4:-}" != -l ]; then
+  printf '%s\n' "${4:-}" >> "${FM_FAKE_TMUX_TEXT_LOG:?}"
+fi
+exec "${0}.orig" "$@"
+SH
+  chmod +x "$FAKEBIN_DIR/tmux"
+}
+
 test_remote_seeded_home_spawns_from_treehouse_pool() {
   local rec id out status lock
   id='pool-remote-seeded-r13'
@@ -92,6 +104,34 @@ REC
     printf 'published worktree=%s\nresolved project lock=%s\n' "$POOL_DIR" "$lock"
   fi
   pass "a remote-seeded secondmate home allocates and launches from its Treehouse pool"
+}
+
+test_treehouse_request_uses_home_root_only_for_local_secondmates() {
+  local rec id out status mate_project mate_pool main_home
+  local FM_FAKE_TMUX_TEXT_LOG
+  id='pool-main-root-r1'; rec=$(make_case main-root "$id"); read_case_record "$rec"
+  log_spawn_text_lines; FM_FAKE_TMUX_TEXT_LOG="$CASE_DIR/main-send.log"; export FM_FAKE_TMUX_TEXT_LOG
+  out=$(run_spawn "$id" --scout); status=$?
+  expect_code 0 "$status" "main-home spawn should succeed"$'\n'"$out"
+  grep -Fxq 'treehouse get' "$FM_FAKE_TMUX_TEXT_LOG" || fail "main-home spawn changed its Treehouse request"
+  assert_no_grep 'treehouse --root' "$FM_FAKE_TMUX_TEXT_LOG" "main-home spawn selected a different Treehouse root"
+
+  id='pool-secondmate-root-r1'; rec=$(make_case secondmate-root "$id"); read_case_record "$rec"
+  log_spawn_text_lines
+  mate_project="$HOME_DIR/projects/fixture"; git clone --quiet "$PROJECT_DIR" "$mate_project"
+  git -C "$mate_project" remote set-url origin "$(git -C "$PROJECT_DIR" remote get-url origin)"
+  mate_pool="$HOME_DIR/projects/.treehouse/fixture-r1/1/fixture"
+  mkdir -p "$(dirname "$mate_pool")"
+  git -C "$mate_project" worktree add --quiet --detach "$mate_pool" HEAD
+  main_home="$CASE_DIR/main-home"; mkdir -p "$main_home/state"
+  printf 'schema=fm-secondmate-parent.v1\nroute=local\nparent_home=%s\n' "$main_home" > "$HOME_DIR/.fm-secondmate-parent"
+  PROJECT_DIR=$mate_project; POOL_DIR=$mate_pool
+  FM_FAKE_TMUX_TEXT_LOG="$CASE_DIR/secondmate-send.log"
+  out=$(run_spawn "$id" --scout); status=$?
+  expect_code 0 "$status" "secondmate-home spawn should succeed"$'\n'"$out"
+  grep -Fxq "treehouse --root '$HOME_DIR/projects' get" "$FM_FAKE_TMUX_TEXT_LOG" \
+    || fail "secondmate spawn did not select its own Treehouse root"
+  pass "Treehouse requests stay default for the main home and use a local secondmate's root"
 }
 
 test_linked_spawning_home_rejects_primary_before_refresh() {
@@ -744,6 +784,7 @@ test_pool_slot_claim_follows_the_spawn_outcome() {
 }
 
 test_remote_seeded_home_spawns_from_treehouse_pool
+test_treehouse_request_uses_home_root_only_for_local_secondmates
 test_pool_slot_claim_follows_the_spawn_outcome
 test_linked_spawning_home_rejects_primary_before_refresh
 test_stale_pool_base_refreshes_before_branching
