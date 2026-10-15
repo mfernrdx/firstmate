@@ -3285,6 +3285,8 @@ if [ "$RELAUNCH" -eq 1 ]; then
 elif [ "$KIND" != secondmate ] && [ "$BACKEND" != orca ]; then
   treehouse_get='treehouse get'
   if [ "$(real_path_or_raw "$FM_HOME")" != "$(fm_firstmate_root_home "$FM_HOME")" ]; then
+    # A local secondmate pane inherits the multiplexer server's shell environment,
+    # so pass its projects root to keep Treehouse out of the primary home's pool.
     treehouse_get="treehouse --root $(shell_quote "$PROJECTS") get"
   fi
   spawn_send_text_line "$WT_TARGET" "$treehouse_get"
