@@ -137,42 +137,6 @@ test_treehouse_request_uses_home_root_only_for_local_secondmates() {
   pass "Treehouse requests stay default for the main home and use a local secondmate's root"
 }
 
-test_local_secondmate_claude_trust_refusal_kills_new_window() {
-  local rec id out status mate_project mate_pool main_home blocked_config trust_config
-  local FM_FAKE_TMUX_TEXT_LOG FM_FAKE_TMUX_OPS_LOG
-  id='pool-secondmate-claude-trust-abort-r1'
-  rec=$(make_case secondmate-claude-trust-abort "$id"); read_case_record "$rec"
-  log_spawn_text_lines
-  mate_project="$HOME_DIR/projects/fixture"
-  git clone --quiet "$PROJECT_DIR" "$mate_project"
-  git -C "$mate_project" remote set-url origin "$(git -C "$PROJECT_DIR" remote get-url origin)"
-  mate_pool="$HOME_DIR/projects/.treehouse/fixture-r1/1/fixture"
-  mkdir -p "$(dirname "$mate_pool")"
-  git -C "$mate_project" worktree add --quiet --detach "$mate_pool" HEAD
-  main_home="$CASE_DIR/main-home"; mkdir -p "$main_home/state"
-  printf 'schema=fm-secondmate-parent.v1\nroute=local\nparent_home=%s\n' "$main_home" > "$HOME_DIR/.fm-secondmate-parent"
-  blocked_config="$CASE_DIR/blocked-claude-config"
-  printf 'not a directory\n' > "$blocked_config"
-  trust_config="$blocked_config/store"
-  PROJECT_DIR=$mate_project; POOL_DIR=$mate_pool
-  FM_FAKE_TMUX_TEXT_LOG="$CASE_DIR/secondmate-send.log"
-  FM_FAKE_TMUX_OPS_LOG="$CASE_DIR/tmux-operations.log"
-  export FM_FAKE_TMUX_TEXT_LOG FM_FAKE_TMUX_OPS_LOG
-
-  out=$(FM_TEST_CLAUDE_CONFIG_DIR="$trust_config" \
-    run_spawn "$id" --scout --harness claude)
-  status=$?
-  expect_code 1 "$status" "Claude trust refusal should fail the spawn"$'\n'"$out"
-  assert_contains "$out" "could not pre-register Claude workspace trust" \
-    "the fixture did not force Claude trust registration to fail"
-  grep -Fxq "treehouse --root '$HOME_DIR/projects' get" "$FM_FAKE_TMUX_TEXT_LOG" \
-    || fail "the spawn refused before sending the local secondmate Treehouse request"
-  grep -Fxq "kill-window -t =firstmate:=fm-$id" "$FM_FAKE_TMUX_OPS_LOG" \
-    || fail "the failed secondmate spawn left its new tmux window behind"$'\n'"$(cat "$FM_FAKE_TMUX_OPS_LOG")"
-  [ ! -e "$HOME_DIR/state/$id.meta" ] || fail "the refused spawn published task metadata"
-  pass "a local secondmate Claude trust refusal removes the newly created tmux window"
-}
-
 test_linked_spawning_home_rejects_primary_before_refresh() {
   local rec id out status returned primary spawning before_reflog
   for returned in primary primary-alias spawning scout; do
@@ -824,7 +788,6 @@ test_pool_slot_claim_follows_the_spawn_outcome() {
 
 test_remote_seeded_home_spawns_from_treehouse_pool
 test_treehouse_request_uses_home_root_only_for_local_secondmates
-test_local_secondmate_claude_trust_refusal_kills_new_window
 test_pool_slot_claim_follows_the_spawn_outcome
 test_linked_spawning_home_rejects_primary_before_refresh
 test_stale_pool_base_refreshes_before_branching

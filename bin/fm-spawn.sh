@@ -913,7 +913,6 @@ BACKEND=
 ORCA_ABORT_CLEANUP=0
 ORCA_WORKTREE_ID=
 ORCA_TERMINAL=
-SPAWN_TMUX_ABORT_CLEANUP=0
 HERDR_PROJECTION_ABORT_CLEANUP=0
 HERDR_PROJECTION_ABORT_SESSION=
 HERDR_PROJECTION_ABORT_TASK_PANE=
@@ -972,12 +971,6 @@ parse_orca_worktree_result() {
 
 spawn_abort_cleanup() {
   local status=$?
-  if [ "$status" -ne 0 ] && [ "$SPAWN_TMUX_ABORT_CLEANUP" = 1 ] \
-     && [ -n "${T:-}" ] && [ ! -e "$STATE/$ID.meta" ] \
-     && [ ! -L "$STATE/$ID.meta" ]; then
-    SPAWN_TMUX_ABORT_CLEANUP=0
-    fm_backend_kill tmux "$T" || true
-  fi
   if [ "$RELAUNCH_REPLACEMENT_PENDING" = 1 ] \
      && [ "$SPAWN_META_PUBLISH_STARTED" = 1 ] \
      && [ -n "$SPAWN_META_TMP" ] \
@@ -2790,7 +2783,6 @@ case "$BACKEND" in
     # stays $T (the name form), which is safe now that rename is disabled.
     WID=$(fm_backend_tmux_create_task "$SES" "$W" "$PROJ_ABS") || exit 1
     WT_TARGET="$WID"
-    SPAWN_TMUX_ABORT_CLEANUP=1
     ;;
   herdr)
     # fm_backend_herdr_workspace_label resolves the target workspace from
