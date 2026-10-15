@@ -275,8 +275,9 @@ A project-less seed requires no existing project clones or `data/projects.md` en
 A preexisting project-bearing charter is also refused until it is re-scaffolded with `--no-projects` or removed.
 The lease is held under the secondmate id until explicit retirement or seed rollback returns it, so normal restarts do not free or recycle the home.
 Teardown of a leased home fails closed if `treehouse return` cannot release the lease; plain-clone homes with no treehouse pool slot are removed directly.
-Secondmate routes cover `no-mistakes` and `direct-PR` projects; `local-only` projects remain main-firstmate work.
+Secondmate routes cover `no-mistakes`, `no-mistakes-slim`, and `direct-PR` projects; `local-only` projects remain main-firstmate work.
 For `no-mistakes` projects, seeding initializes only projects newly cloned into a secondmate home and refuses to mutate a preexisting clone that is not already initialized.
+Slim project setup is initialized lazily by its task worker in the isolated task worktree when needed.
 After creating a secondmate, move existing main-backlog queued items that you have judged in-scope with `fm-backlog-handoff.sh <secondmate-id> <item-key>...`; it refuses In flight, Done, or non-secondmate homes, and its [script header](../bin/fm-backlog-handoff.sh) owns route-specific wake outcomes and retries.
 Set `FM_SECONDMATE_CHARTER` to seed from inline charter text when no filled charter brief exists; set `FM_SECONDMATE_SCOPE` when the routing scope should differ from the charter text.
 The seeded home's `data/charter.md` owns the standard secondmate lifecycle and escalation contract; the route file points to it through the existing `home:` field instead of adding another pointer.
@@ -1019,10 +1020,10 @@ FM_PROCEVENT_LAUNCH_FLOOR_SECONDS=1     # minimum interval between launches of o
 FM_PROCEVENT_LAUNCH_CONFIRM_SECONDS=3   # how long reconcile waits for the runners it started to prove they are running; 1..600, keep well below FM_POLL
 FM_WHEN_OUTPUT_TAIL_BYTES=8192          # bound on the command-output tail inside one condition->action outcome document
 FM_CODEX_WATCH_CHECKPOINT=180   # seconds per foreground watcher checkpoint in Codex primary supervision
-FM_CREW_STATE_NM_TIMEOUT=10   # seconds allowed per no-mistakes query inside fm-crew-state.sh
-FM_TEARDOWN_NM_TIMEOUT=10    # seconds allowed per no-mistakes query or abort inside fm-teardown.sh
-FM_CREW_STATE_RUNS_LIMIT=200  # recent no-mistakes run rows scanned when the runs ledger is consulted: axi status cannot be attributed directly, or its answer is terminal and may have a live sibling run
-FM_TEARDOWN_NM_RUNS_LIMIT=200  # recent no-mistakes run rows scanned to prove an unresolved-head parked run belongs to teardown's task
+FM_CREW_STATE_NM_TIMEOUT=10   # seconds allowed per selected-pipeline query inside fm-crew-state.sh
+FM_TEARDOWN_NM_TIMEOUT=10    # seconds allowed per selected-pipeline query or abort inside fm-teardown.sh
+FM_CREW_STATE_RUNS_LIMIT=200  # recent selected-pipeline run rows scanned when the runs ledger is consulted: axi status cannot be attributed directly, or its answer is terminal and may have a live sibling run
+FM_TEARDOWN_NM_RUNS_LIMIT=200  # recent selected-pipeline run rows scanned to prove an unresolved-head parked run belongs to teardown's task
 FM_CREW_STATE_BIN=bin/fm-crew-state.sh   # test override for the current-state reader used by working/paused watcher triage
 FM_MAIL_USER=      # mail-plane IMAP/SMTP login, from .env or environment (docs/configuration.md "Mail plane")
 FM_MAIL_PASS=      # mail-plane IMAP/SMTP password
