@@ -768,7 +768,7 @@ lay_out_as_pool_slot() {
 # anything is published, and an abort while the allocation lock is still held
 # leaves no claim naming a task with no record.
 test_pool_slot_claim_follows_the_spawn_outcome() {
-  local rec id out status before
+  local rec id out status before mate_home
 
   id='pool-slot-claim-r1'
   rec=$(make_case slot-claim "$id")
@@ -830,6 +830,29 @@ test_pool_slot_claim_follows_the_spawn_outcome() {
     || fail "an unreadable task record did not preserve the previous slot marker"
   [ ! -e "$HOME_DIR/state/$id.meta" ] \
     || fail "spawn published a record after finding unreadable task metadata"
+
+  id='pool-slot-state-unreadable-r2'
+  rec=$(make_case slot-state-unreadable "$id")
+  read_case_record "$rec"
+  lay_out_as_pool_slot
+  mate_home="$CASE_DIR/local-mate"
+  mkdir -p "$mate_home/state"
+  printf -- '- local-mate - local state fixture (home: %s; scope: ownership scan; projects: ; added 2026-10-20)\n' \
+    "$mate_home" > "$HOME_DIR/data/secondmates.md"
+  printf 'worktree=%s\n' "$POOL_DIR" > "$mate_home/state/stale-worker.meta"
+  chmod 000 "$mate_home/state"
+  printf 'task=stale-worker\nhome=%s\n' "$mate_home" > "$SLOT_CLAIM"
+  before=$(cat "$SLOT_CLAIM")
+  out=$(run_spawn "$id" --scout)
+  status=$?
+  chmod 700 "$mate_home/state"
+  [ "$status" -ne 0 ] || fail "spawn claimed a slot while a registered local state directory was unreadable"
+  assert_contains "$out" "state directory cannot be scanned" \
+    "spawn did not fail closed on an unreadable registered local state directory"
+  [ "$(cat "$SLOT_CLAIM")" = "$before" ] \
+    || fail "an unreadable registered local state directory did not preserve the previous slot marker"
+  [ ! -e "$HOME_DIR/state/$id.meta" ] \
+    || fail "spawn published a record after finding an unreadable registered local state directory"
 
   id='pool-slot-unclaimable-r1'
   rec=$(make_case slot-unclaimable "$id")

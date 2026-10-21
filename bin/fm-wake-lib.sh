@@ -1356,6 +1356,13 @@ require_exclusive_worktree_slot_record() {
   slot=$(CDPATH='' cd -- "$worktree" 2>/dev/null && pwd -P) || return 0
   collect_local_firstmate_states "$record_state" || return 1
   for state_dir in "${TREEHOUSE_OWNER_STATES[@]}"; do
+    if [ ! -e "$state_dir" ] && [ ! -L "$state_dir" ]; then
+      continue
+    fi
+    if [ ! -d "$state_dir" ] || [ ! -r "$state_dir" ] || [ ! -x "$state_dir" ]; then
+      echo "REFUSED: local Firstmate task state directory cannot be scanned at $state_dir; ownership is unknown, so nothing was changed." >&2
+      return 1
+    fi
     for other in "$state_dir"/*.meta; do
       [ -f "$other" ] && [ ! -L "$other" ] || continue
       [ "$other" != "$record_meta" ] || continue
