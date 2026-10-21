@@ -1,0 +1,9 @@
+$ fm_treehouse_slot_owner_claim /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M5EGPBW1J9GW15KKF4A6R93H/.fm-slot-claim-live-721781/pool/1/project newcomer /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M5EGPBW1J9GW15KKF4A6R93H/.fm-slot-claim-live-721781/home
+REFUSED: task newcomer's recorded worktree /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M5EGPBW1J9GW15KKF4A6R93H/.fm-slot-claim-live-721781/pool/1/project is also task previous-holder's recorded worktree.
+Returning that pool slot would kill previous-holder's processes and reset its copy, so nothing was changed - not even with --force.
+Reconcile whichever record is wrong (bin/fm-crew-state.sh newcomer; bin/fm-crew-state.sh previous-holder), then re-run teardown.
+exit=1
+observable_state=claim_preserved; newcomer_record=absent
+$ fm_treehouse_slot_owner_claim /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M5EGPBW1J9GW15KKF4A6R93H/.fm-slot-claim-live-721781/pool/1/project newcomer /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M5EGPBW1J9GW15KKF4A6R93H/.fm-slot-claim-live-721781/home # after previous record removal
+exit=0
+marker_task=newcomer

@@ -1,0 +1,100 @@
+# remote-seeded Treehouse spawn command
+$ FM_HOME=/tmp/fm-spawn-pool-base-freshen.bN5MxA/remote-seeded/home bin/fm-spawn.sh pool-remote-seeded-r13 /tmp/fm-spawn-pool-base-freshen.bN5MxA/remote-seeded/project --scout
+spawned pool-remote-seeded-r13 harness=codex kind=scout window=firstmate:fm-pool-remote-seeded-r13 worktree=/tmp/fm-spawn-pool-base-freshen.bN5MxA/remote-seeded/pool
+exit=0
+published worktree=/tmp/fm-spawn-pool-base-freshen.bN5MxA/remote-seeded/pool
+resolved project lock=/tmp/fm-spawn-pool-base-freshen.bN5MxA/remote-seeded/home/state/.treehouse-project-0506add0be2da92e223f412b630d4f641fb96cce.lock
+ok - a remote-seeded secondmate home allocates and launches from its Treehouse pool
+ok - Treehouse requests stay default for the main home and use a local secondmate's root
+ok - a local secondmate routes Treehouse through its selected projects root
+ok - a Treehouse slot claim names the launched task, refuses when unclaimable, and is dropped by a locked abort
+# evidence begin: linked-home spawn, returned=primary
+$ bin/fm-spawn.sh pool-linked-primary-r12 /tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-primary/secondmate --scout
+error: treehouse get did not enter an isolated worktree within 60s (last seen '/tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-primary/project': it is the repository's primary checkout (its git dir is the spawning project's common git dir); spawning project '/tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-primary/secondmate'); inspect window firstmate:fm-pool-linked-primary-r12
+exit=1
+primary HEAD before=fa648c0dce8ef086c1dac64e428c09903bffbc95 after=fa648c0dce8ef086c1dac64e428c09903bffbc95
+primary reflog before:
+fa648c0 HEAD@{0}: commit (initial): initial
+primary reflog after:
+fa648c0 HEAD@{0}: commit (initial): initial
+FETCH_HEAD absent
+task metadata absent
+# evidence end
+ok - linked spawning home: primary preserves the primary before any refresh
+# evidence begin: linked-home spawn, returned=primary-alias
+$ bin/fm-spawn.sh pool-linked-primary-alias-r12 /tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-primary-alias/secondmate --scout
+error: treehouse get did not enter an isolated worktree within 60s (last seen '/tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-primary-alias/primary-alias': it is the repository's primary checkout (its git dir is the spawning project's common git dir); spawning project '/tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-primary-alias/secondmate'); inspect window firstmate:fm-pool-linked-primary-alias-r12
+exit=1
+primary HEAD before=9564cf3c02dbc749373a7f095cd40eae2da128b5 after=9564cf3c02dbc749373a7f095cd40eae2da128b5
+primary reflog before:
+9564cf3 HEAD@{0}: commit (initial): initial
+primary reflog after:
+9564cf3 HEAD@{0}: commit (initial): initial
+FETCH_HEAD absent
+task metadata absent
+# evidence end
+ok - linked spawning home: primary-alias preserves the primary before any refresh
+# evidence begin: linked-home spawn, returned=spawning
+$ bin/fm-spawn.sh pool-linked-spawning-r12 /tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-spawning/secondmate --scout
+error: treehouse get did not enter an isolated worktree within 60s (last seen '/tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-spawning/secondmate': it is the spawning project itself; spawning project '/tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-spawning/secondmate'); inspect window firstmate:fm-pool-linked-spawning-r12
+exit=1
+primary HEAD before=93a4eb0b2a0d8b66f381c79e9249cf58ffb4ef22 after=93a4eb0b2a0d8b66f381c79e9249cf58ffb4ef22
+primary reflog before:
+93a4eb0 HEAD@{0}: commit (initial): initial
+primary reflog after:
+93a4eb0 HEAD@{0}: commit (initial): initial
+FETCH_HEAD absent
+task metadata absent
+# evidence end
+ok - linked spawning home: spawning preserves the primary before any refresh
+# evidence begin: linked-home spawn, returned=scout
+$ bin/fm-spawn.sh pool-linked-scout-r12 /tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-scout/secondmate --scout
+spawned pool-linked-scout-r12 harness=codex kind=scout window=firstmate:fm-pool-linked-scout-r12 worktree=/tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-scout/pool
+exit=0
+primary HEAD before=ab424b6f6615e5ea207bbbc96576d1d2e9c3b1c5 after=ab424b6f6615e5ea207bbbc96576d1d2e9c3b1c5
+primary reflog before:
+ab424b6 HEAD@{0}: commit (initial): initial
+primary reflog after:
+ab424b6 HEAD@{0}: commit (initial): initial
+FETCH_HEAD absent
+saved task metadata:
+window=firstmate:fm-pool-linked-scout-r12
+endpoint_task_id=pool-linked-scout-r12
+worktree=/tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-scout/pool
+project=/tmp/fm-spawn-pool-base-freshen.bN5MxA/linked-scout/secondmate
+harness=codex
+kind=scout
+tasktmp=/tmp/fm-pool-linked-scout-r12
+model=default
+effort=default
+spawn_gen=s1792563527.624422.4514
+worker HEAD=9ebed09b6331f15750688b5243f376110bfeb252 origin/main=9ebed09b6331f15750688b5243f376110bfeb252
+# evidence end
+ok - linked spawning home: scout preserves the primary before any refresh
+# observed spawn: spawned pool-current-base-r1 harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-current-base-r1 worktree=/tmp/fm-spawn-pool-base-freshen.bN5MxA/current-base/pool
+# observed base: HEAD=9ebed09b6331f15750688b5243f376110bfeb252 origin/main=9ebed09b6331f15750688b5243f376110bfeb252 advanced-main=must survive a newly spawned branch
+ok - a stale pooled worktree refreshes to current origin/main before a crew branch is created
+ok - a stale pooled worktree resolves and refreshes a non-main default branch
+# observed direct-pr spawn: spawned pool-direct-pr-r3 harness=codex kind=ship mode=direct-PR yolo=off window=firstmate:fm-pool-direct-pr-r3 worktree=/tmp/fm-spawn-pool-base-freshen.bN5MxA/direct-pr/pool
+# observed scout spawn: spawned pool-scout-r3 harness=codex kind=scout window=firstmate:fm-pool-scout-r3 worktree=/tmp/fm-spawn-pool-base-freshen.bN5MxA/scout/pool
+ok - direct-PR ships and scouts both refresh stale pooled worktrees before launch
+# observed dirty refusal: error: pooled worktree '/tmp/fm-spawn-pool-base-freshen.bN5MxA/dirty-refusal/pool' is not clean; refusing to discard uncommitted work while refreshing its base; preserved=keep this local work
+ok - a dirty pooled worktree is refused without discarding its local work
+# observed unresolved-default refusal: error: could not resolve origin's current default branch for pooled worktree '/tmp/fm-spawn-pool-base-freshen.bN5MxA/unresolved-default/pool'; refusing to launch from a potentially stale base
+ok - an unresolved remote default branch refuses the pooled worktree
+# observed unreachable-origin refusal: error: could not fetch origin for pooled worktree '/tmp/fm-spawn-pool-base-freshen.bN5MxA/unreachable-origin/pool'; refusing to launch from a potentially stale base
+ok - an unreachable origin refuses a potentially stale pooled worktree
+# observed origin-less launch: spawned pool-originless-r6 harness=codex kind=ship mode=no-mistakes yolo=off window=firstmate:fm-pool-originless-r6 worktree=/tmp/fm-spawn-pool-base-freshen.bN5MxA/originless/pool
+ok - an origin-less pooled worktree launches as-is, skipping the freshness gate
+ok - a dirty origin-less pooled worktree is refused without discarding its local work
+ok - an origin configuration without a URL refuses the pooled worktree
+ok - an empty origin configuration section refuses the pooled worktree
+ok - an empty-only included origin section documents the accepted detection boundary
+ok - an inactive conditional origin include leaves the pooled worktree origin-less
+# observed stale-pin refusal: error: submodule 'ui' is checked out at 1f0d555b6ce27d1b00026c40350d1d4cc69d4675, but this base records 8152d85a9ecdee254231dfec132237d76dc9f04a
+ok - an origin-less pool with a stale submodule pin refuses while naming both pins and no remedy
+ok - an unpushed submodule commit keeps the uncommitted-work refusal and survives it
+ok - work inside a submodule is still refused as uncommitted work, not called stale
+ok - a stale pin carrying real work is refused conservatively, never called stale
+ok - a stale pin beside other dirt yields the conservative refusal alone, with no stale-pin line
+# all fm-spawn-pool-base-freshen tests passed

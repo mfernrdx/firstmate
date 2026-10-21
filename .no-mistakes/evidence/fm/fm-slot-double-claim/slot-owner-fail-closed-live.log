@@ -1,0 +1,8 @@
+$ fm_treehouse_slot_owner_claim <slot> newcomer <home> # previous task metadata unreadable
+REFUSED: task previous-holder metadata cannot be read at /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M5EGPBW1J9GW15KKF4A6R93H/.fm-slot-fail-closed-725207/home/state/previous-holder.meta; ownership is unknown, so nothing was changed.
+exit=1
+observable_state=claim_preserved
+$ fm_treehouse_slot_owner_claim <slot> newcomer <home> # registered local state unreadable
+REFUSED: local Firstmate task state directory cannot be scanned at /home/michael/.no-mistakes/worktrees/fb2ed104bd8c/01M5EGPBW1J9GW15KKF4A6R93H/.fm-slot-fail-closed-725207/local-mate/state; ownership is unknown, so nothing was changed.
+exit=1
+observable_state=claim_preserved
