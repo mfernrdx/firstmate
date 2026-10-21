@@ -785,6 +785,32 @@ test_pool_slot_claim_follows_the_spawn_outcome() {
   grep -Fxq -- "home=$HOME_DIR" "$SLOT_CLAIM" \
     || fail "the slot claim does not name the spawning home: $(cat "$SLOT_CLAIM")"
 
+  id='pool-slot-recorded-r1'
+  rec=$(make_case slot-recorded "$id")
+  read_case_record "$rec"
+  lay_out_as_pool_slot
+  printf 'task=previous-holder\nhome=%s\n' "$HOME_DIR" > "$SLOT_CLAIM"
+  before=$(cat "$SLOT_CLAIM")
+  printf 'worktree=%s\n' "$POOL_DIR" > "$HOME_DIR/state/previous-holder.meta"
+  out=$(run_spawn "$id" --scout)
+  status=$?
+  [ "$status" -ne 0 ] || fail "spawn claimed a slot still named by another task record"
+  assert_contains "$out" "could not claim Treehouse pool slot" \
+    "spawn did not report the existing slot-claim refusal"
+  [ "$(cat "$SLOT_CLAIM")" = "$before" ] \
+    || fail "a refused claim replaced the previous slot marker"
+  [ ! -e "$HOME_DIR/state/$id.meta" ] \
+    || fail "spawn published a record after refusing the claimed slot"
+
+  rm "$HOME_DIR/state/previous-holder.meta"
+  out=$(run_spawn "$id" --scout)
+  status=$?
+  expect_code 0 "$status" "spawn should claim the slot after the previous record is gone"$'\n'"$out"
+  grep -Fxq -- "task=$id" "$SLOT_CLAIM" \
+    || fail "the fresh claim does not name the new task: $(cat "$SLOT_CLAIM")"
+  grep -Fxq -- "home=$HOME_DIR" "$SLOT_CLAIM" \
+    || fail "the fresh claim does not name the spawning home: $(cat "$SLOT_CLAIM")"
+
   id='pool-slot-unclaimable-r1'
   rec=$(make_case slot-unclaimable "$id")
   read_case_record "$rec"
