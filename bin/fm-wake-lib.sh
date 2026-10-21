@@ -1351,7 +1351,8 @@ collect_local_firstmate_states() {
 
 require_exclusive_worktree_slot_record() {
   local record_meta=$1 record_id=$2 record_state=$3 worktree=$4
-  local slot state_dir other other_id field other_path other_slot
+  local slot state_dir other other_id field other_path other_slot other_meta_content other_line
+  local other_worktree other_home
   slot=$(CDPATH='' cd -- "$worktree" 2>/dev/null && pwd -P) || return 0
   collect_local_firstmate_states "$record_state" || return 1
   for state_dir in "${TREEHOUSE_OWNER_STATES[@]}"; do
@@ -1359,8 +1360,23 @@ require_exclusive_worktree_slot_record() {
       [ -f "$other" ] && [ ! -L "$other" ] || continue
       [ "$other" != "$record_meta" ] || continue
       other_id=$(basename "$other" .meta)
+      if ! other_meta_content=$(cat -- "$other" 2>/dev/null); then
+        echo "REFUSED: task $other_id metadata cannot be read at $other; ownership is unknown, so nothing was changed." >&2
+        return 1
+      fi
+      other_worktree=
+      other_home=
+      while IFS= read -r other_line || [ -n "$other_line" ]; do
+        case "$other_line" in
+          worktree=*) other_worktree=${other_line#*=} ;;
+          home=*) other_home=${other_line#*=} ;;
+        esac
+      done <<< "$other_meta_content"
       for field in worktree home; do
-        other_path=$(fm_meta_get "$other" "$field")
+        case "$field" in
+          worktree) other_path=$other_worktree ;;
+          home) other_path=$other_home ;;
+        esac
         [ -n "$other_path" ] || continue
         other_slot=$(CDPATH='' cd -- "$other_path" 2>/dev/null && pwd -P) || continue
         [ "$other_slot" = "$slot" ] || continue
