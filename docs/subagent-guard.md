@@ -1,8 +1,8 @@
 # Primary-session delegation guard
 
-This document is the authoritative human-readable contract for the guard that stops a firstmate primary from delegating work outside the fleet.
+This document is the authoritative human-readable contract for the primary delegation guard and its tracked cloud-worker exception.
 
-The shipped mechanism is `bin/fm-subagent-pretool-check.sh`, a PreToolUse guard that denies a delegation-SHAPED tool name in a genuine primary home.
+The shipped mechanism is `bin/fm-subagent-pretool-check.sh`, a PreToolUse guard that denies delegation-shaped tool names in a genuine primary home unless they pass the tracked cloud-worker gate below.
 Claude primaries should also use an untracked per-home local `permissions.deny` list as hardening for known Claude delegation tools, because it removes them from the model's schema entirely.
 That deny list must not ship in tracked `.claude/settings.json` because it is Claude-only rather than harness-agnostic, and because tracked project settings propagate into linked worktrees where they disarm legitimate crewmates.
 
@@ -17,19 +17,19 @@ Three consequences were observed, not hypothesized.
 - The supervision cycle then stayed down for 73 minutes unnoticed, which silently killed the captain's Workflowy intake channel, since that channel only fires while a watch cycle runs.
 
 The deeper defect is that the bypass did not merely skip dispatch, it made the in-flight-work branch of the guard stack structurally inert.
-Only `bin/fm-spawn.sh` writes `state/<id>.meta`, so untracked project work contributes nothing to the in-flight count used by `bin/fm-supervision-lib.sh` and `bin/fm-turnend-guard.sh`.
-Work started through the harness's own delegation tool writes no metadata, so the in-flight count stayed at zero and the turn-end guard never blocked a blind turn end.
+Tracked local crewmate and scout dispatches write `state/<id>.meta` through `bin/fm-spawn.sh`, and tracked cloud-worker dispatches write it through `bin/fm-cloud-task.sh`; untracked project work contributes nothing to the in-flight count used by `bin/fm-supervision-lib.sh` and `bin/fm-turnend-guard.sh`.
+Work started through an untracked harness delegation tool writes no metadata, so the in-flight count stays at zero and the turn-end guard may not block a blind turn end.
 
 That is the reason the fence has to sit on the harness tool surface, before the primary can create untracked work.
 No additional guard keyed on task metadata can catch this class of failure, because the failure is precisely the absence of that metadata.
 
 ## Purpose and boundary
 
-The guard addresses one concrete, mechanically identifiable event: the primary session reaching for a tool that creates work the fleet will not know about.
+The guard addresses one concrete, mechanically identifiable event: the primary session reaching for a tool that creates work outside the fleet's tracked dispatch paths.
 
 It deliberately does **not** address the broader question of whether a given piece of work should be delegated at all.
 That question is a judgment boundary over read-and-think work, it has no tool-shape signal, and a hook that tried to police it would degrade into an advisory nag.
-The scope line is therefore: wrong tool reached for, deny; wrong amount of thinking done before reaching for a tool, out of scope.
+The scope line is therefore: untracked work-creating tool reached for, deny; wrong amount of thinking done before reaching for a tool, out of scope.
 
 The guard is also not a dispatch-quality check.
 It says nothing about whether the resulting brief, project, or delivery mode is correct.
@@ -40,6 +40,9 @@ It says nothing about whether the resulting brief, project, or delivery mode is 
 It classifies the tool NAME by shape rather than against a fixed list.
 The tracked Claude PreToolUse matcher is `.*`, so every Claude tool name reaches the script and the script is the single owner of classification.
 A stem-enumerating matcher would reintroduce the fail-open-by-enumeration problem this guard exists to solve, because any future tool name outside the matcher would be silently missed before the script could inspect it.
+The work-creating exception is the cloud-worker gate: when this home has `config/cloud-workers` and at least one valid `kind=cloud` task record, `RemoteTrigger`, `ListAgents`, and `SendMessage` are allowed.
+The gate is home-wide and does not match a tool call's repository, prompt, trigger, or session against the stored task record.
+The [cloud-workers skill](../.agents/skills/cloud-workers/SKILL.md) owns the cloud procedure and `bin/fm-cloud-task.sh` owns its task-record lifecycle.
 A tool is delegation-shaped when its normalized lowercase name contains one of these stems:
 
 ```text
@@ -64,7 +67,8 @@ Three exclusions keep the shape test from producing false positives.
 Both exclusion lists match the whole normalized name, never a substring, so neither can widen by accident: `TaskCreateAgent` and `RemoteTaskCreate` stay denied.
 Folding the two lists together would be the drift risk, because the observe-or-stop rationale is not true of a tool that writes.
 
-The shipped guard fires on every delegation-shaped name that reaches it, including future names that no deny list knows about yet.
+The classifier evaluates every delegation-shaped name that reaches it, including future names that no deny list knows about yet.
+The guard denies these names by default, with the cloud-worker exception above.
 That future-name behavior is the reason the tracked matcher must match all tools and let the script filter.
 
 ## Recommended Local Claude Deny List
@@ -79,6 +83,7 @@ Claude primaries should add this deny list in untracked per-home local settings,
       "Agent",
       "Workflow",
       "RemoteTrigger",
+      "ListAgents",
       "Monitor",
       "ScheduleWakeup",
       "SendMessage",
@@ -106,6 +111,9 @@ It is not tracked for two reasons.
 - It is Claude-only, so it can never be the harness-agnostic shipped fix.
 - A tracked `.claude/settings.json` propagates into linked worktrees and disarms legitimate crewmates.
   This was verified when a Claude session in a task worktree of this repo lost its `Agent` tool.
+
+This list hides `RemoteTrigger`, `ListAgents`, and `SendMessage` even when the cloud-worker gate is enabled.
+For cloud-worker use, omit those entries so Claude can offer the calls to the tracked guard; see the [cloud-workers skill](../.agents/skills/cloud-workers/SKILL.md) for the workflow.
 
 The width of the list remains a captain-owned decision, because denying some of these changes how the captain works with the primary session.
 Keep it as one flat local array that is reviewable at a glance and narrowable in one line.
@@ -354,7 +362,7 @@ The live consequence is confirmed by the shipped-guard result above: Claude hono
 ## Automated validation
 
 `tests/fm-subagent-pretool-check.test.sh` owns the acceptance matrix and is registered in the `pure-contract-unit` family in `bin/fm-test-run.sh`.
-It covers the tracked Claude settings boundary that forbids a `permissions` key; the match-all Claude hook registration; denial of every work-creating delegation tool by shape; denial of twelve hypothetical future tool names that appear on no list; the observe-or-stop, plan-only, and MCP exclusions; the exactness of the plan-only exclusion against six near-miss names a substring or shorter-stem widening would release; the scout-present and scout-absent message variants; the escape hatch including its fail-closed values; inertness in a linked task worktree and in a non-firstmate repo; in-scope enforcement for a marked secondmate home; both stdin transports; the empty-stdout requirement; fail-open transport behavior; and the preserved `Bash` seatbelts and `Stop` guard.
+It covers the tracked Claude settings boundary that forbids a `permissions` key; the match-all Claude hook registration; denial of non-cloud work-creating delegation tools by shape; denial of twelve hypothetical future tool names that appear on no list; cloud-tool denial without opt-in and with absent or malformed records; cloud-tool allowance for a valid record; the observe-or-stop, plan-only, and MCP exclusions; the exactness of the plan-only exclusion against six near-miss names a substring or shorter-stem widening would release; the scout-present and scout-absent message variants; the escape hatch including its fail-closed values; inertness in a linked task worktree and in a non-firstmate repo; in-scope enforcement for a marked secondmate home; both stdin transports; the empty-stdout requirement; fail-open transport behavior; and the preserved `Bash` seatbelts and `Stop` guard.
 
 Run:
 
@@ -374,11 +382,11 @@ The same exception now also covers Cursor, which loads the tracked Claude settin
 Cursor's subagent tool name has not been verified, and registering an unverified matcher would be a guess rather than coverage, so closing it needs the same verification step.
 
 This change does not close the deeper harness-agnostic defect.
-Every firstmate guard's in-flight-work branch keys off `state/<id>.meta`, and only `bin/fm-spawn.sh` writes that record.
+Every firstmate guard's in-flight-work branch keys off `state/<id>.meta`, written by `bin/fm-spawn.sh` for local crewmates and scouts and by `bin/fm-cloud-task.sh` for cloud workers.
 `bin/fm-supervision-lib.sh` also recognizes a Relay poll as supervision need, but unaccounted primary work still contributes nothing to that predicate.
 Without an independent Relay need, unaccounted primary work therefore reads as idle rather than suspicious.
 
 The durable fix for that class is to make the guards treat "the primary is doing project-shaped work with zero `state/*.meta` files" as a suspicious state rather than an idle one.
 That would catch this class on any harness, including work created through `Bash`.
-This change fences only the Claude tool surface.
-That is a separate change to `bin/fm-supervision-lib.sh` and `bin/fm-turnend-guard.sh` and is out of scope here.
+This change fences Claude delegation tools by default and admits its three cloud tools only through an opted-in task record; it does not catch work started through `Bash`.
+Closing the remaining primary-work accounting gap is a separate change to `bin/fm-supervision-lib.sh` and `bin/fm-turnend-guard.sh` and is out of scope here.

@@ -17,6 +17,7 @@ The cloud session works against its GitHub repository and is tracked locally thr
 
 Write the complete worker brief to a prompt file such as `data/<task-id>/brief.md`.
 Confirm the matching task has a dispatchable backlog item, then run `bin/fm-cloud-task.sh record <task-id> --repo <owner/repo> --prompt-file <path>`.
+Before using the cloud tools, check the local Claude deny-list guidance in `docs/subagent-guard.md`, because it can hide tools before the tracked guard sees them.
 Use RemoteTrigger `create` or `run` to start the routine for the target GitHub repository with that prompt.
 Use ListAgents to identify the associated cloud session when its id is not returned by RemoteTrigger.
 After creation or launch, run `bin/fm-cloud-task.sh bind <task-id> --trigger <trigger-id> [--session <session-id>]` with the returned identifiers.

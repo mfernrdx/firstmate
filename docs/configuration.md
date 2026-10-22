@@ -124,8 +124,9 @@ Every routine firstmate backlog command therefore runs through [`bin/fm-tasks-ax
 ## Cloud workers (config/cloud-workers)
 
 Cloud workers are off by default; creating the regular local, gitignored `config/cloud-workers` file opts in this home.
-The delegation guard then allows `RemoteTrigger`, `ListAgents`, and `SendMessage` only while a live `kind=cloud` task record exists in this home's state, with [`bin/fm-cloud-task.sh`](../bin/fm-cloud-task.sh) owning record, binding, and retirement.
-The cloud worker procedure and access limits are owned by [`.agents/skills/cloud-workers/SKILL.md`](../.agents/skills/cloud-workers/SKILL.md).
+Secondmate homes do not inherit this opt-in, so enable it separately in any home that needs cloud-worker access.
+[`docs/subagent-guard.md`](subagent-guard.md) owns the resulting cloud-tool guard behavior, and [`bin/fm-cloud-task.sh`](../bin/fm-cloud-task.sh) owns task records and backlog transitions.
+The cloud worker procedure, PR handoff, and access limits are owned by [`.agents/skills/cloud-workers/SKILL.md`](../.agents/skills/cloud-workers/SKILL.md).
 
 ## Runtime backend (config/backend / FM_BACKEND)
 
