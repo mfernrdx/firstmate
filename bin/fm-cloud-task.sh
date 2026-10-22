@@ -5,6 +5,7 @@
 #   bin/fm-cloud-task.sh record <task-id> --repo <owner/repo> --prompt-file <path>
 #   bin/fm-cloud-task.sh bind <task-id> --trigger <trigger-id> [--session <session-id>]
 #   bin/fm-cloud-task.sh retire <task-id>
+#   bin/fm-cloud-task.sh has-record
 #
 # record requires config/cloud-workers and publishes state/<task-id>.meta with
 # kind=cloud before moving an applicable backlog row to In flight.
@@ -49,6 +50,7 @@ usage() {
 Usage: fm-cloud-task.sh record <task-id> --repo <owner/repo> --prompt-file <path>
        fm-cloud-task.sh bind <task-id> --trigger <trigger-id> [--session <session-id>]
        fm-cloud-task.sh retire <task-id>
+       fm-cloud-task.sh has-record
 EOF
 }
 
@@ -70,6 +72,16 @@ cloud_meta_valid() {  # <meta-path>
              gen ~ /^[A-Za-z0-9._-]+$/)
     }
   ' "$meta" 2>/dev/null
+}
+
+has_valid_cloud_record() {
+  local meta
+  [ -d "$STATE" ] && [ ! -L "$STATE" ] || return 1
+  for meta in "$STATE"/*.meta; do
+    [ -f "$meta" ] && [ ! -L "$meta" ] || continue
+    cloud_meta_valid "$meta" && return 0
+  done
+  return 1
 }
 
 acquire_task_lock() {  # <task-id>
@@ -246,6 +258,10 @@ retire_task() {
 
 case "${1:-}" in
   -h|--help) usage; exit 0 ;;
+  has-record)
+    [ "$#" -eq 1 ] || fail "usage: has-record"
+    has_valid_cloud_record
+    ;;
   record)
     [ "$#" -ge 2 ] || fail "usage: record <task-id> --repo <owner/repo> --prompt-file <path>"
     task_id=$2; shift 2

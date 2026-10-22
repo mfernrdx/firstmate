@@ -52,7 +52,8 @@
 #     but mutable current-state, status, report, and endpoint evidence is discarded
 #     rather than attributed to the replacement generation.
 #     Local current_state is parsed from bin/fm-crew-state.sh <id> and preserves
-#     state, source, detail, and raw line separately. Remote secondmate rows use
+#     state, source, detail, and raw line separately. Cloud rows use their
+#     recorded RemoteTrigger and session identifiers; remote secondmate rows use
 #     an explicit unknown value because their endpoint liveness belongs to
 #     supervision rather than this snapshot path.
 #     paths.status_log.last_event is historical wake-event data only, never
@@ -610,6 +611,7 @@ prefetch_task_observations() {  # <meta> <id>
   local meta=$1 id=$2 remote_host current_file endpoint_file current_pid='' current_rc=0
   local status_log status_capture report_path report_capture
   local kind backend target endpoint_exists=null agent_alive=not_checked generation_current=1
+  kind=$(meta_value "$meta" kind)
   remote_host=$(meta_value "$meta" remote_host)
   current_file="$SNAPSHOT_TASK_DIR/$id.json"
   endpoint_file="$SNAPSHOT_TASK_DIR/$id.endpoint"
@@ -624,14 +626,16 @@ prefetch_task_observations() {  # <meta> <id>
     snapshot_mark_optional_present "$report_path" "$report_capture" || current_rc=1
   fi
 
-  if [ -n "$remote_host" ]; then
+  if [ "$generation_current" = 1 ] && [ "$kind" = cloud ]; then
+    crew_state_json "$id" "$meta" "$status_capture" > "$current_file" &
+    current_pid=$!
+  elif [ -n "$remote_host" ]; then
     jq -n '{state:"unknown",source:"none",detail:"remote endpoint liveness not collected by fleet snapshot",raw:""}' \
       > "$current_file" || current_rc=1
     agent_alive=unknown
   elif [ "$generation_current" = 1 ]; then
     crew_state_json "$id" "$meta" "$status_capture" > "$current_file" &
     current_pid=$!
-    kind=$(meta_value "$meta" kind)
     backend=$(fm_backend_of_meta "$meta")
     target=$(fm_backend_target_of_meta "$meta")
     if [ -n "$target" ]; then
@@ -720,7 +724,7 @@ prefetch_task_current_states() {
 
 task_json_lines() {
   local meta original_meta id kind harness mode yolo project worktree home projects spawn_gen backend target status_log report_path
-  local remote_host remote_root current_file endpoint_file observation_line index=0
+  local remote_host remote_root cloud_trigger cloud_session current_file endpoint_file observation_line index=0
   local pr pr_source event_json current_json endpoint_exists agent_alive meta_json status_json report_json worktree_json home_json
   local last_event_raw current_state current_source pending_decision blocked_event report_present=0 pr_from_status
   local open_decisions_tsv open_decisions_json
@@ -742,7 +746,12 @@ task_json_lines() {
     spawn_gen=$(meta_value "$meta" spawn_gen)
     remote_host=$(meta_value "$meta" remote_host)
     remote_root=$(meta_value "$meta" remote_root)
-    if [ -n "$remote_host" ]; then
+    cloud_trigger=$(meta_value "$meta" trigger_id)
+    cloud_session=$(meta_value "$meta" session_id)
+    if [ "$kind" = cloud ]; then
+      backend=cloud
+      target=
+    elif [ -n "$remote_host" ]; then
       backend=$(meta_value "$meta" remote_backend)
       [ -n "$backend" ] || backend=unknown
       target=$(meta_value "$meta" remote_target)
@@ -845,6 +854,8 @@ task_json_lines() {
       --arg target "$target" \
       --arg remote_host "$remote_host" \
       --arg remote_root "$remote_root" \
+      --arg cloud_trigger "$cloud_trigger" \
+      --arg cloud_session "$cloud_session" \
       --arg pr "$pr" \
       --arg pr_source "$pr_source" \
       --arg agent_alive "$agent_alive" \
@@ -894,7 +905,11 @@ task_json_lines() {
           last_event_text:$last_event_raw
         },
         actions:(
-          if $kind == "secondmate" then
+          if $kind == "cloud" then
+            {watch:("RemoteTrigger list_runs/get_run_log" + (if $cloud_trigger == "" then "" else " (trigger " + $cloud_trigger + ")" end)),
+             steer:("SendMessage " + (if $cloud_session == "" then "<session-id>" else $cloud_session end) + "; read the reply in RemoteTrigger get_run_log"),
+             return_channel_note:"Cloud-session replies are read from the RemoteTrigger run log."}
+          elif $kind == "secondmate" then
             {send:"bin/fm-send.sh fm-\($id) \u0027<request>\u0027",
              watch:"read status/doc return channel; do not routinely fm-peek a secondmate for answers",
              return_channel_note:"Secondmate answers come back through status/doc paths after a marked fm-send request."}

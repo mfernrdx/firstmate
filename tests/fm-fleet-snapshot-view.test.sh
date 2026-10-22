@@ -197,6 +197,40 @@ test_fixture_snapshot_json() {
   pass "fixture snapshot covers task rows, backlog rows, pointers, and stable ordering"
 }
 
+test_cloud_task_snapshot_uses_cloud_context_and_controls() {
+  local home fakebin out view
+  home=$(make_home cloud-task)
+  fm_write_meta "$home/state/cloud-task.meta" \
+    "kind=cloud" \
+    "repo=example/project" \
+    "prompt_file=$home/data/brief.md" \
+    "spawn_gen=c1.2.3" \
+    "trigger_id=trigger-123" \
+    "session_id=session-456"
+  fakebin=$(make_fakebin "$home")
+  out=$(PATH="$fakebin:$PATH" FM_HOME="$home" "$SNAPSHOT" --json)
+  printf '%s' "$out" | jq -e '
+    .tasks[] | select(.id == "cloud-task")
+    | .kind == "cloud"
+      and .backend == "cloud"
+      and .current_state.state == "working"
+      and .current_state.source == "cloud"
+      and (.current_state.detail | contains("repo=example/project") and contains("trigger_id=trigger-123") and contains("session_id=session-456"))
+      and .endpoint.target == null
+      and .endpoint.exists == null
+      and .paths.worktree.path == null
+      and (.actions.watch | contains("RemoteTrigger") and contains("list_runs") and contains("get_run_log") and contains("trigger-123"))
+      and (.actions.steer | contains("SendMessage") and contains("session-456") and contains("get_run_log"))
+      and ((.actions.watch | contains("fm-peek")) | not)
+      and ((.actions.steer | contains("fm-send")) | not)
+  ' >/dev/null || fail "cloud task snapshot used local state or controls: $out"
+  view=$(PATH="$fakebin:$PATH" FM_HOME="$home" "$VIEW")
+  assert_contains "$view" "working / cloud" "fleet view shows the cloud state source"
+  assert_contains "$view" "RemoteTrigger list_runs/get_run_log" "fleet view offers cloud log supervision"
+  assert_not_contains "$view" "fm-peek.sh" "fleet view does not direct cloud work to local peek"
+  pass "cloud tasks retain cloud state and supervision actions in snapshot and fleet view"
+}
+
 # R1 owner contract: main_inventory discloses orphan in-flight and unstructured
 # current rows without inventing task rows.
 test_hold_buckets_are_total_and_text_blind() {
@@ -1047,6 +1081,7 @@ EOF
 
 test_empty_fleet_json
 test_fixture_snapshot_json
+test_cloud_task_snapshot_uses_cloud_context_and_controls
 test_home_summary_excludes_secondmate_from_child_inventory
 test_undated_captain_hold_phrasing_and_aging
 test_hold_buckets_are_total_and_text_blind

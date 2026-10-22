@@ -132,6 +132,15 @@ EOF
     expect_deny "other delegation tool with a cloud record" "$tool"
   done
   rm -f "$STATE/cloud-task.meta"
+  cat > "$STATE/malformed-cloud.meta" <<'EOF'
+kind=cloud
+repo=example/project
+spawn_gen=c1.2.3
+EOF
+  for tool in RemoteTrigger ListAgents SendMessage; do
+    expect_deny "malformed cloud record" "$tool"
+  done
+  rm -f "$STATE/malformed-cloud.meta"
   expect_deny "cloud tool after record retirement" RemoteTrigger
   actual=$(jq -r '.systemMessage' "$ERR")
   case "$actual" in *'bin/fm-cloud-task.sh'*) ;; *) fail "retired record denial must name fm-cloud-task.sh: $actual" ;; esac

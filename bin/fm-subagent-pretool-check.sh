@@ -191,31 +191,11 @@ case "$TOOL" in
   RemoteTrigger|ListAgents|SendMessage) CLOUD_TOOL=1 ;;
 esac
 
-cloud_task_record_present() {
-  local meta
-  [ -d "$STATE" ] && [ ! -L "$STATE" ] || return 1
-  for meta in "$STATE"/*.meta; do
-    [ -f "$meta" ] && [ ! -L "$meta" ] || continue
-    if LC_ALL=C awk -F= '
-      $1 == "kind" { kinds++; kind = substr($0, index($0, "=") + 1) }
-      $1 == "repo" { repos++; repo = substr($0, index($0, "=") + 1) }
-      $1 == "prompt_file" { prompts++; prompt = substr($0, index($0, "=") + 1) }
-      $1 == "spawn_gen" { gens++; gen = substr($0, index($0, "=") + 1) }
-      END {
-        exit !(kinds == 1 && kind == "cloud" && repos == 1 && repo != "" &&
-               prompts == 1 && prompt != "" && gens == 1 && gen ~ /^[A-Za-z0-9._-]+$/)
-      }
-    ' "$meta" 2>/dev/null; then
-      return 0
-    fi
-  done
-  return 1
-}
-
 CLOUD_RECORD_REQUIRED=0
 CONFIG=${FM_CONFIG_OVERRIDE:-$FM_HOME/config}
 if [ "$CLOUD_TOOL" = 1 ] && [ -f "$CONFIG/cloud-workers" ] && [ ! -L "$CONFIG/cloud-workers" ]; then
-  if cloud_task_record_present; then
+  if FM_ROOT_OVERRIDE="$FM_ROOT" FM_HOME="$FM_HOME" FM_STATE_OVERRIDE="$STATE" \
+    FM_CONFIG_OVERRIDE="$CONFIG" "$SCRIPT_DIR/fm-cloud-task.sh" has-record; then
     exit 0
   fi
   CLOUD_RECORD_REQUIRED=1
