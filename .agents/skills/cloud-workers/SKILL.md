@@ -31,4 +31,4 @@ Cloud sessions cannot reach local files, local keys, production systems, or brow
 Use only the cloud session's built-in GitHub access; do not set up Tailscale, a tunnel, or another network bridge.
 When the cloud session opens a PR, arm `bin/fm-pr-check.sh <task-id> <pr-url>` and hand the PR branch to the project's normal local validation process.
 Complete local validation before recommending the captain merge the PR.
-After the PR lands or the cloud work is abandoned, run `bin/fm-cloud-task.sh retire <task-id>`.
+After the PR lands, run `bin/fm-cloud-task.sh retire <task-id> --pr-merged`; after cloud work is abandoned, run `bin/fm-cloud-task.sh retire <task-id>` so unfinished backlog rows return to Queued where automatic backlog transitions apply, preserving captain holds.

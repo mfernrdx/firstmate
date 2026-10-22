@@ -4,15 +4,16 @@
 # Usage:
 #   bin/fm-cloud-task.sh record <task-id> --repo <owner/repo> --prompt-file <path>
 #   bin/fm-cloud-task.sh bind <task-id> --trigger <trigger-id> [--session <session-id>]
-#   bin/fm-cloud-task.sh retire <task-id>
+#   bin/fm-cloud-task.sh retire <task-id> [--pr-merged]
 #   bin/fm-cloud-task.sh has-record
 #
 # record requires config/cloud-workers and publishes state/<task-id>.meta with
 # kind=cloud before moving an applicable backlog row to In flight.
 # bind stores the RemoteTrigger id and optional cloud-session id on that record.
-# retire removes the record and completes an applicable backlog transition,
-# preserving an open captain-held row; manual or absent backlog transitions
-# retain the home's existing local-backlog policy.
+# retire removes the record, returning unfinished backlog rows to Queued unless
+# --pr-merged is supplied, while preserving captain holds.
+# Manual or absent backlog transitions retain the home's existing local-backlog
+# policy.
 set -u
 
 SCRIPT_DIR=$(CDPATH='' cd -- "$(dirname -- "${BASH_SOURCE[0]}")" 2>/dev/null && pwd -P) || exit 2
@@ -49,7 +50,7 @@ usage() {
   cat <<'EOF'
 Usage: fm-cloud-task.sh record <task-id> --repo <owner/repo> --prompt-file <path>
        fm-cloud-task.sh bind <task-id> --trigger <trigger-id> [--session <session-id>]
-       fm-cloud-task.sh retire <task-id>
+       fm-cloud-task.sh retire <task-id> [--pr-merged]
        fm-cloud-task.sh has-record
 EOF
 }
@@ -122,6 +123,15 @@ validate_cloud_id() {  # <label> <value>
   case "$value" in
     ''|*[!A-Za-z0-9._:-]*) fail "$label must contain only letters, digits, dot, underscore, colon, or hyphen" ;;
   esac
+}
+
+cloud_pr_merged() {  # <meta-path>
+  local result
+  fm_pr_metadata_identity_parse "$1" || return 1
+  result=$("$SCRIPT_DIR/fm-pr-poll.sh" --validated \
+    "$FM_PR_META_PROVIDER" "$FM_PR_META_URL" "$FM_PR_META_HOST" \
+    "$FM_PR_META_PATH" "$FM_PR_META_NUMBER") || return 1
+  [ "$result" = merged ]
 }
 
 record_task() {
@@ -219,7 +229,16 @@ bind_task() {
 }
 
 retire_task() {
-  local id=$1 meta marker op backlog_rc
+  local id=$1 pr_merged=0 meta marker op backlog_rc
+  shift
+  case "$#" in
+    0) ;;
+    1)
+      [ "$1" = --pr-merged ] || fail "unknown retire argument: $1"
+      pr_merged=1
+      ;;
+    *) fail "usage: retire <task-id> [--pr-merged]" ;;
+  esac
   fm_task_id_creation_valid "$id" || fail "invalid task id: $id"
   fm_backlog_directory_present "$STATE" "state directory" || fail "$FM_BACKLOG_TRANSITION_ERROR"
   acquire_task_lock "$id"
@@ -227,6 +246,9 @@ retire_task() {
   marker="$STATE/$id.backlog-close"
   cloud_meta_valid "$meta" || fail "task $id has no valid kind=cloud record"
   fm_backlog_meta_spawn_gen "$meta" "$STATE" || fail "$FM_BACKLOG_TRANSITION_ERROR"
+  if [ "$pr_merged" = 1 ]; then
+    cloud_pr_merged "$meta" || fail "task $id has no recorded PR confirmed as merged"
+  fi
   if [ -e "$marker" ] || [ -L "$marker" ]; then
     fail "task $id already has a pending backlog close at $marker"
   fi
@@ -237,7 +259,8 @@ retire_task() {
     fi
     op=close
     local -a flags=()
-    if [ "${FM_BACKLOG_ROW_STATE%% *}" != "done" ] && [ "$FM_BACKLOG_ROW_HOLD_KIND" = captain ]; then
+    if [ "${FM_BACKLOG_ROW_STATE%% *}" != "done" ] \
+       && { [ "$pr_merged" != 1 ] || [ "$FM_BACKLOG_ROW_HOLD_KIND" = captain ]; }; then
       op=retain
       flags=(--retain)
     fi
@@ -273,8 +296,9 @@ case "${1:-}" in
     bind_task "$task_id" "$@"
     ;;
   retire)
-    [ "$#" -eq 2 ] || fail "usage: retire <task-id>"
-    retire_task "$2"
+    [ "$#" -ge 2 ] || fail "usage: retire <task-id> [--pr-merged]"
+    task_id=$2; shift 2
+    retire_task "$task_id" "$@"
     ;;
   *) fail "usage: record, bind, retire, or --help" ;;
 esac

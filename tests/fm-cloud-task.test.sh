@@ -46,12 +46,21 @@ esac
 EOF
 chmod +x "$FAKEBIN/tasks-axi"
 
+cat > "$FAKEBIN/gh" <<'EOF'
+#!/usr/bin/env bash
+set -u
+[ "${1:-}" = pr ] && [ "${2:-}" = view ] || exit 1
+printf '%s\n' "${CLOUD_TEST_PR_STATE:-OPEN}"
+EOF
+chmod +x "$FAKEBIN/gh"
+
 run_cloud() {
   env -u TASKS_AXI_BACKEND -u TASKS_AXI_FILE \
     PATH="$FAKEBIN:$PATH" \
     FM_ROOT_OVERRIDE="$PRIMARY" FM_HOME="$PRIMARY" \
     FM_STATE_OVERRIDE="$STATE" FM_DATA_OVERRIDE="$DATA" \
     FM_CONFIG_OVERRIDE="$CONFIG" CLOUD_TEST_DATA="$DATA" \
+    CLOUD_TEST_PR_STATE="${CLOUD_TEST_PR_STATE:-OPEN}" \
     "$CLOUD_TASK" "$@"
 }
 
@@ -95,8 +104,10 @@ test_record_bind_and_retire_pair_the_backlog_and_task_record() {
     "$ROOT/bin/fm-subagent-pretool-check.sh" --claude --tool RemoteTrigger > "$OUT" 2> "$ERR" || rc=$?
   [ "$rc" -eq 0 ] || fail "recorded cloud task did not release RemoteTrigger: $(cat "$ERR")"
 
+  printf '%s\n' 'pr=https://github.com/example/project/pull/123' >> "$STATE/cloud-task.meta"
   rc=0
-  run_cloud retire cloud-task > "$OUT" 2> "$ERR" || fail "retire failed: $(cat "$ERR")"
+  CLOUD_TEST_PR_STATE=MERGED run_cloud retire cloud-task --pr-merged > "$OUT" 2> "$ERR" \
+    || fail "retire failed: $(cat "$ERR")"
   [ ! -e "$STATE/cloud-task.meta" ] || fail "retire left the cloud task record live"
   [ ! -e "$STATE/cloud-task.backlog-close" ] || fail "retire left a completed close marker"
   [ "$(cat "$DATA/cloud-task.state")" = "done" ] || fail "retire did not close the backlog item"
@@ -107,6 +118,30 @@ test_record_bind_and_retire_pair_the_backlog_and_task_record() {
   pass "record, bind, and retire maintain the task record and backlog together"
 }
 
+test_abandoned_cloud_task_returns_backlog_item_to_queued() {
+  local id=abandoned-cloud-task rc=0
+  printf 'queued\n' > "$DATA/$id.state"
+  run_cloud record "$id" --repo example/project --prompt-file "$PROMPT" > "$OUT" 2> "$ERR" \
+    || fail "record failed: $(cat "$ERR")"
+  printf '%s\n' 'pr=https://github.com/example/project/pull/456' >> "$STATE/$id.meta"
+  run_cloud retire "$id" --pr-merged > "$OUT" 2> "$ERR" || rc=$?
+  [ "$rc" -eq 2 ] || fail "unmerged PR was accepted as merged, got $rc"
+  [ "$(cat "$DATA/$id.state")" = in_flight ] \
+    || fail "failed merge confirmation changed the backlog item"
+  [ -f "$STATE/$id.meta" ] || fail "failed merge confirmation removed the cloud task record"
+  [ ! -e "$STATE/$id.backlog-close" ] \
+    || fail "failed merge confirmation published a backlog transition"
+  rc=0
+  run_cloud retire "$id" > "$OUT" 2> "$ERR" \
+    || fail "abandoned retire failed: $(cat "$ERR")"
+  [ "$(cat "$DATA/$id.state")" = queued ] \
+    || fail "abandoned retire did not return the backlog item to Queued"
+  [ ! -e "$STATE/$id.meta" ] || fail "abandoned retire left the cloud task record live"
+  [ ! -e "$STATE/$id.backlog-close" ] || fail "abandoned retire left a pending backlog marker"
+  pass "abandoned cloud retirement returns its backlog item to Queued"
+}
+
 test_record_requires_opt_in
 test_record_requires_a_backlog_item_when_the_gate_applies
 test_record_bind_and_retire_pair_the_backlog_and_task_record
+test_abandoned_cloud_task_returns_backlog_item_to_queued
