@@ -186,6 +186,41 @@ STATE=${FM_STATE_OVERRIDE:-$FM_HOME/state}
 . "$SCRIPT_DIR/fm-primary-scope-lib.sh"
 fm_primary_scope_matches "$FM_ROOT" "$STATE" || exit 0
 
+CLOUD_TOOL=0
+case "$TOOL" in
+  RemoteTrigger|ListAgents|SendMessage) CLOUD_TOOL=1 ;;
+esac
+
+cloud_task_record_present() {
+  local meta
+  [ -d "$STATE" ] && [ ! -L "$STATE" ] || return 1
+  for meta in "$STATE"/*.meta; do
+    [ -f "$meta" ] && [ ! -L "$meta" ] || continue
+    if LC_ALL=C awk -F= '
+      $1 == "kind" { kinds++; kind = substr($0, index($0, "=") + 1) }
+      $1 == "repo" { repos++; repo = substr($0, index($0, "=") + 1) }
+      $1 == "prompt_file" { prompts++; prompt = substr($0, index($0, "=") + 1) }
+      $1 == "spawn_gen" { gens++; gen = substr($0, index($0, "=") + 1) }
+      END {
+        exit !(kinds == 1 && kind == "cloud" && repos == 1 && repo != "" &&
+               prompts == 1 && prompt != "" && gens == 1 && gen ~ /^[A-Za-z0-9._-]+$/)
+      }
+    ' "$meta" 2>/dev/null; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+CLOUD_RECORD_REQUIRED=0
+CONFIG=${FM_CONFIG_OVERRIDE:-$FM_HOME/config}
+if [ "$CLOUD_TOOL" = 1 ] && [ -f "$CONFIG/cloud-workers" ] && [ ! -L "$CONFIG/cloud-workers" ]; then
+  if cloud_task_record_present; then
+    exit 0
+  fi
+  CLOUD_RECORD_REQUIRED=1
+fi
+
 # Name the dedicated scout entry point only when this home carries it; degrade
 # to the two-step brief-then-spawn path when it does not, rather than naming a
 # script that is not there.
@@ -195,7 +230,11 @@ else
   ROUTE='first classify the work under the AGENTS.md intake contract, then use bin/fm-brief.sh followed by bin/fm-spawn.sh for dispatched work'
 fi
 
-REASON="[subagent-dispatch] the firstmate primary dispatches through the fleet, not the harness's own delegation tools: work started that way has no durable fleet record, leaves every firstmate guard inert, and dies with this session. Instead, $ROUTE (blocked tool: $TOOL, delegation-shaped on \"$MATCHED\"). Launch the session with FM_ALLOW_SUBAGENT=1 for a deliberate exception."
+if [ "$CLOUD_RECORD_REQUIRED" = 1 ]; then
+  REASON="[subagent-dispatch] $TOOL is available only while a cloud worker task is recorded; use bin/fm-cloud-task.sh record <task-id> --repo <owner/repo> --prompt-file <path> before using RemoteTrigger, ListAgents, or SendMessage (blocked tool: $TOOL, delegation-shaped on \"$MATCHED\")."
+else
+  REASON="[subagent-dispatch] the firstmate primary dispatches through the fleet, not the harness's own delegation tools: work started that way has no durable fleet record, leaves every firstmate guard inert, and dies with this session. Instead, $ROUTE (blocked tool: $TOOL, delegation-shaped on \"$MATCHED\"). Launch the session with FM_ALLOW_SUBAGENT=1 for a deliberate exception."
+fi
 
 json_escape() {
   printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' | tr '\n' ' '

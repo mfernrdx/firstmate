@@ -121,6 +121,12 @@ The tracked `.tasks.toml` paths resolve against the directory tasks-axi runs in,
 tasks-axi writes by renaming a temp file over its target, which replaces a symlink with a regular file, so linking the code-root copy into the home forks the queue on the first such write rather than keeping the two in step.
 Every routine firstmate backlog command therefore runs through [`bin/fm-tasks-axi.sh`](../bin/fm-tasks-axi.sh), which addresses this home's backlog and archive from any working directory exactly as lifecycle transitions do, and bootstrap reports a code-root `data/backlog.md` or `data/done-archive.md` that is not this home's own file as a `BACKLOG_RECONCILE: code-root ...` line even in a read-only session.
 
+## Cloud workers (config/cloud-workers)
+
+Cloud workers are off by default; creating the regular local, gitignored `config/cloud-workers` file opts in this home.
+The delegation guard then allows `RemoteTrigger`, `ListAgents`, and `SendMessage` only while a live `kind=cloud` task record exists in this home's state, with [`bin/fm-cloud-task.sh`](../bin/fm-cloud-task.sh) owning record, binding, and retirement.
+The cloud worker procedure and access limits are owned by [`.agents/skills/cloud-workers/SKILL.md`](../.agents/skills/cloud-workers/SKILL.md).
+
 ## Runtime backend (config/backend / FM_BACKEND)
 
 For spawn-capable adapters, the runtime session-provider backend controls where task windows/endpoints are created, captured, sent to, watched, and killed.

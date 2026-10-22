@@ -25,7 +25,7 @@ SCOUT_ROUTE='first classify the work under the AGENTS.md intake contract: work a
 # This inventory is shape-classification coverage for the shipped guard and the
 # recommended local Claude deny-list hardening list, but tracked settings must
 # not ship that Claude-only permissions layer.
-DELEGATION_TOOLS='Task Agent Workflow RemoteTrigger Monitor ScheduleWakeup SendMessage EnterWorktree ExitWorktree CronCreate CronDelete CronList TaskCreate TaskGet TaskList TaskUpdate TaskStop TaskOutput'
+DELEGATION_TOOLS='Task Agent Workflow RemoteTrigger ListAgents Monitor ScheduleWakeup SendMessage EnterWorktree ExitWorktree CronCreate CronDelete CronList TaskCreate TaskGet TaskList TaskUpdate TaskStop TaskOutput'
 
 # Tools that must stay available: denying these would break ordinary work.
 PRESERVED_TOOLS='Bash Edit Read Write Skill ToolSearch WebFetch WebSearch NotebookEdit ReportFindings DesignSync PushNotification'
@@ -97,6 +97,46 @@ test_guard_denies_hypothetical_future_tools() {
     expect_deny "future delegation tool" "$tool"
   done
   pass "the guard denies delegation-shaped tools that no deny list knows about yet"
+}
+
+test_cloud_tools_remain_denied_without_opt_in() {
+  local tool actual
+  rm -f "$PRIMARY/config/cloud-workers"
+  for tool in RemoteTrigger ListAgents SendMessage; do
+    expect_deny "cloud tool without opt-in" "$tool"
+  done
+  actual=$(jq -r '.systemMessage' "$ERR")
+  case "$actual" in *'bin/fm-cloud-task.sh'*) fail "default-off denial must keep today's dispatch route: $actual" ;; esac
+  pass "cloud tools stay denied when the home has not opted in"
+}
+
+test_cloud_tools_require_a_live_cloud_record() {
+  local tool actual
+  mkdir -p "$PRIMARY/config"
+  : > "$PRIMARY/config/cloud-workers"
+  for tool in RemoteTrigger ListAgents SendMessage; do
+    expect_deny "cloud tool without a record" "$tool"
+    actual=$(jq -r '.systemMessage' "$ERR")
+    case "$actual" in *'bin/fm-cloud-task.sh'*) ;; *) fail "opted-in denial must name fm-cloud-task.sh: $actual" ;; esac
+  done
+  cat > "$STATE/cloud-task.meta" <<'EOF'
+kind=cloud
+repo=example/project
+prompt_file=/tmp/cloud-brief.md
+spawn_gen=c1.2.3
+EOF
+  for tool in RemoteTrigger ListAgents SendMessage; do
+    expect_allow "recorded cloud tool" "$tool"
+  done
+  for tool in Agent Task Workflow RemoteExec remote_trigger; do
+    expect_deny "other delegation tool with a cloud record" "$tool"
+  done
+  rm -f "$STATE/cloud-task.meta"
+  expect_deny "cloud tool after record retirement" RemoteTrigger
+  actual=$(jq -r '.systemMessage' "$ERR")
+  case "$actual" in *'bin/fm-cloud-task.sh'*) ;; *) fail "retired record denial must name fm-cloud-task.sh: $actual" ;; esac
+  rm -f "$PRIMARY/config/cloud-workers"
+  pass "only the three cloud tools are allowed while an opted-in cloud record exists"
 }
 
 test_guard_allows_ordinary_and_observe_only_tools() {
@@ -278,6 +318,8 @@ test_missing_jq_stdin_transport_fails_open() {
 
 test_guard_denies_every_currently_known_delegation_tool
 test_guard_denies_hypothetical_future_tools
+test_cloud_tools_remain_denied_without_opt_in
+test_cloud_tools_require_a_live_cloud_record
 test_guard_allows_ordinary_and_observe_only_tools
 test_guard_allows_session_local_todo_tools
 test_plan_only_exclusion_is_exact_name
