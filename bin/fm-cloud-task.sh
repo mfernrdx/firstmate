@@ -33,11 +33,13 @@ umask 077
 # shellcheck source=bin/fm-pr-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-pr-lib.sh"
 
+CONTROL_LOCK=
 META_LOCK=
 META_TMP=
 cleanup() {
   [ -z "$META_TMP" ] || rm -f -- "$META_TMP"
   [ -z "$META_LOCK" ] || fm_lock_release "$META_LOCK" || true
+  [ -z "$CONTROL_LOCK" ] || fm_lock_release "$CONTROL_LOCK" || true
 }
 trap cleanup EXIT
 
@@ -91,6 +93,11 @@ acquire_task_lock() {  # <task-id>
   fm_lock_acquire_wait "$META_LOCK" || fail "could not lock task $1"
 }
 
+acquire_task_control_lock() {  # <task-id>
+  CONTROL_LOCK="$STATE/.control-$1.lock"
+  fm_lock_acquire_wait "$CONTROL_LOCK" || fail "could not lock task control for $1"
+}
+
 resolve_prompt_file() {  # <path>
   local raw=$1 dir base
   [ -n "$raw" ] || fail "--prompt-file requires a path"
@@ -126,8 +133,14 @@ validate_cloud_id() {  # <label> <value>
 }
 
 cloud_pr_merged() {  # <meta-path>
-  local result
+  local result repo pr_repo
+  local LC_ALL=C
   fm_pr_metadata_identity_parse "$1" || return 1
+  [ "$FM_PR_META_PROVIDER" = github ] && [ "$FM_PR_META_HOST" = github.com ] || return 1
+  repo=$(awk -F= '$1 == "repo" { print substr($0, index($0, "=") + 1) }' "$1") || return 1
+  repo=$(printf '%s' "$repo" | tr '[:upper:]' '[:lower:]') || return 1
+  pr_repo=$(printf '%s' "$FM_PR_META_PATH" | tr '[:upper:]' '[:lower:]') || return 1
+  [ -n "$repo" ] && [ "$repo" = "$pr_repo" ] || return 1
   result=$("$SCRIPT_DIR/fm-pr-poll.sh" --validated \
     "$FM_PR_META_PROVIDER" "$FM_PR_META_URL" "$FM_PR_META_HOST" \
     "$FM_PR_META_PATH" "$FM_PR_META_NUMBER") || return 1
@@ -215,13 +228,18 @@ bind_task() {
   fm_backlog_meta_spawn_gen "$meta" "$STATE" || fail "$FM_BACKLOG_TRANSITION_ERROR"
   tmp=$(mktemp "$STATE/.$id.meta.cloud.XXXXXX") || fail "could not stage cloud task binding for $id"
   META_TMP=$tmp
-  if ! awk -F= '$1 != "trigger_id" && $1 != "session_id"' "$meta" > "$tmp"; then
+  if ! awk -F= -v trigger="$trigger" -v session="$session" -v session_set="$session_set" '
+    function bindings() {
+      printf "trigger_id=%s\n", trigger
+      if (session_set == 1) printf "session_id=%s\n", session
+    }
+    $1 == "trigger_id" || $1 == "session_id" { next }
+    $1 == "pr" && !inserted { bindings(); inserted = 1 }
+    { print }
+    END { if (!inserted) bindings() }
+  ' "$meta" > "$tmp"; then
     fail "could not read cloud task record for $id"
   fi
-  {
-    printf 'trigger_id=%s\n' "$trigger"
-    [ "$session_set" = 0 ] || printf 'session_id=%s\n' "$session"
-  } >> "$tmp" || fail "could not write cloud task binding for $id"
   fm_backlog_atomic_transition publish "$tmp" "$meta" "task record" "$STATE" \
     || fail "could not publish cloud task binding: $FM_BACKLOG_TRANSITION_ERROR"
   META_TMP=
@@ -241,6 +259,7 @@ retire_task() {
   esac
   fm_task_id_creation_valid "$id" || fail "invalid task id: $id"
   fm_backlog_directory_present "$STATE" "state directory" || fail "$FM_BACKLOG_TRANSITION_ERROR"
+  acquire_task_control_lock "$id"
   acquire_task_lock "$id"
   meta="$STATE/$id.meta"
   marker="$STATE/$id.backlog-close"

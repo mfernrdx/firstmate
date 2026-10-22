@@ -36,7 +36,17 @@ case "${1:-}" in
       printf '%s\n' 'code: NOT_FOUND'
       exit 1
     fi
-    printf '  state: %s\n  held: no\n  blocked: no\n' "$(cat "$CLOUD_TEST_DATA/$id.state")"
+    held=no
+    hold_kind=-
+    if [ -f "$CLOUD_TEST_DATA/$id.held" ]; then
+      held=yes
+      hold_kind=captain
+    fi
+    if [ "${CLOUD_TEST_SHOW_CAPTURE_ID:-}" = "$id" ]; then
+      printf '%s\n' "$held" > "$CLOUD_TEST_SHOW_CAPTURE"
+    fi
+    printf '  state: %s\n  held: %s\n  blocked: no\n  hold_kind: %s\n' \
+      "$(cat "$CLOUD_TEST_DATA/$id.state")" "$held" "$hold_kind"
     ;;
   start) printf 'in_flight\n' > "$CLOUD_TEST_DATA/${2:?}.state" ;;
   done) printf 'done\n' > "$CLOUD_TEST_DATA/${2:?}.state" ;;
@@ -96,6 +106,7 @@ test_record_bind_and_retire_pair_the_backlog_and_task_record() {
   grep -Fx "prompt_file=$PROMPT" "$STATE/cloud-task.meta" >/dev/null || fail "task record lacks the resolved prompt path"
   grep -E '^spawn_gen=[A-Za-z0-9._-]+$' "$STATE/cloud-task.meta" >/dev/null || fail "task record lacks a spawn generation"
 
+  printf '%s\n' 'pr=https://github.com/example/project/pull/123' >> "$STATE/cloud-task.meta"
   run_cloud bind cloud-task --trigger trigger-123 --session session-456 > "$OUT" 2> "$ERR" \
     || fail "bind failed: $(cat "$ERR")"
   grep -Fx 'trigger_id=trigger-123' "$STATE/cloud-task.meta" >/dev/null || fail "bind did not store the trigger id"
@@ -104,7 +115,6 @@ test_record_bind_and_retire_pair_the_backlog_and_task_record() {
     "$ROOT/bin/fm-subagent-pretool-check.sh" --claude --tool RemoteTrigger > "$OUT" 2> "$ERR" || rc=$?
   [ "$rc" -eq 0 ] || fail "recorded cloud task did not release RemoteTrigger: $(cat "$ERR")"
 
-  printf '%s\n' 'pr=https://github.com/example/project/pull/123' >> "$STATE/cloud-task.meta"
   rc=0
   CLOUD_TEST_PR_STATE=MERGED run_cloud retire cloud-task --pr-merged > "$OUT" 2> "$ERR" \
     || fail "retire failed: $(cat "$ERR")"
@@ -116,6 +126,58 @@ test_record_bind_and_retire_pair_the_backlog_and_task_record() {
   [ "$rc" -eq 2 ] || fail "retired cloud task still released RemoteTrigger, got $rc"
   grep -F 'bin/fm-cloud-task.sh' "$ERR" >/dev/null || fail "post-retirement denial did not point at fm-cloud-task.sh"
   pass "record, bind, and retire maintain the task record and backlog together"
+}
+
+test_merged_pr_must_match_recorded_repository() {
+  local id=mismatched-cloud-pr rc=0
+  printf 'queued\n' > "$DATA/$id.state"
+  run_cloud record "$id" --repo example/project --prompt-file "$PROMPT" > "$OUT" 2> "$ERR" \
+    || fail "record failed: $(cat "$ERR")"
+  printf '%s\n' 'pr=https://github.com/example/other/pull/789' >> "$STATE/$id.meta"
+  CLOUD_TEST_PR_STATE=MERGED run_cloud retire "$id" --pr-merged > "$OUT" 2> "$ERR" || rc=$?
+  [ "$rc" -eq 2 ] || fail "merged PR for a different repository was accepted, got $rc"
+  [ "$(cat "$DATA/$id.state")" = in_flight ] \
+    || fail "mismatched PR changed the backlog item"
+  [ -f "$STATE/$id.meta" ] || fail "mismatched PR removed the cloud task record"
+  [ ! -e "$STATE/$id.backlog-close" ] \
+    || fail "mismatched PR published a backlog transition"
+  run_cloud retire "$id" > "$OUT" 2> "$ERR" || fail "abandoned retire failed: $(cat "$ERR")"
+  [ "$(cat "$DATA/$id.state")" = queued ] || fail "cleanup did not return the row to Queued"
+  pass "merged PR retirement requires the task's recorded repository"
+}
+
+test_retire_waits_for_a_captain_hold_control_lock() {
+  local id=held-cloud-task capture="$TMP_ROOT/held-cloud-task.snapshot" retire_pid attempts prelock_capture
+  printf 'queued\n' > "$DATA/$id.state"
+  run_cloud record "$id" --repo example/project --prompt-file "$PROMPT" > "$OUT" 2> "$ERR" \
+    || fail "record failed: $(cat "$ERR")"
+  printf '%s\n' 'pr=https://github.com/example/project/pull/987' >> "$STATE/$id.meta"
+  # shellcheck source=bin/fm-wake-lib.sh
+  FM_ROOT_OVERRIDE="$PRIMARY" FM_HOME="$PRIMARY" FM_STATE_OVERRIDE="$STATE" \
+    . "$ROOT/bin/fm-wake-lib.sh"
+  fm_lock_acquire_wait "$STATE/.control-$id.lock" || fail "could not acquire the captain control lock"
+  CLOUD_TEST_SHOW_CAPTURE_ID="$id" CLOUD_TEST_SHOW_CAPTURE="$capture" CLOUD_TEST_PR_STATE=MERGED \
+    run_cloud retire "$id" --pr-merged > "$OUT" 2> "$ERR" &
+  retire_pid=$!
+  for ((attempts = 0; attempts < 20; attempts++)); do
+    [ -e "$capture" ] && break
+    sleep 0.1
+  done
+  if [ -e "$capture" ]; then
+    prelock_capture=$(cat "$capture")
+  else
+    prelock_capture=waiting
+  fi
+  : > "$DATA/$id.held"
+  fm_lock_release "$STATE/.control-$id.lock" || fail "could not release the captain control lock"
+  wait "$retire_pid" || fail "retire failed: $(cat "$ERR")"
+  [ "$prelock_capture" = waiting ] || fail "retire probed the backlog while the captain control lock was held"
+  [ "$(cat "$DATA/$id.state")" = queued ] \
+    || fail "retire did not preserve the captain-held backlog item"
+  [ "$(cat "$capture")" = yes ] || fail "retire did not observe the captain hold after acquiring its lock"
+  [ ! -e "$STATE/$id.meta" ] || fail "captain-held retirement left the cloud task record live"
+  [ ! -e "$STATE/$id.backlog-close" ] || fail "captain-held retirement left a pending marker"
+  pass "cloud retirement observes captain holds under the control lock"
 }
 
 test_abandoned_cloud_task_returns_backlog_item_to_queued() {
@@ -144,4 +206,6 @@ test_abandoned_cloud_task_returns_backlog_item_to_queued() {
 test_record_requires_opt_in
 test_record_requires_a_backlog_item_when_the_gate_applies
 test_record_bind_and_retire_pair_the_backlog_and_task_record
+test_merged_pr_must_match_recorded_repository
+test_retire_waits_for_a_captain_hold_control_lock
 test_abandoned_cloud_task_returns_backlog_item_to_queued
