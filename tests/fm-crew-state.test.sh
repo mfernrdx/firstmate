@@ -1934,6 +1934,27 @@ test_torn_down_worktree() {
   pass "torn-down worktree is handled gracefully"
 }
 
+test_cloud_record_uses_cloud_state_without_local_worktree() {
+  local d out rc
+  d=$(new_case cloud-record)
+  fm_write_meta "$d/state/cloud-task.meta" \
+    "kind=cloud" \
+    "repo=example/project" \
+    "prompt_file=$d/brief.md" \
+    "spawn_gen=c1.2.3" \
+    "trigger_id=trigger-123" \
+    "session_id=session-456"
+  out=$(run_crew_state "$d" cloud-task); rc=$?
+  expect_code 0 "$rc" "cloud state read exits 0"
+  assert_contains "$out" "state: working" "an active cloud record reads as working"
+  assert_contains "$out" "source: cloud" "cloud work has its own state source"
+  assert_contains "$out" "repo=example/project" "cloud repository is shown"
+  assert_contains "$out" "trigger_id=trigger-123" "recorded trigger is shown"
+  assert_contains "$out" "session_id=session-456" "recorded session is shown"
+  assert_not_contains "$out" "worktree gone" "cloud work is not classified through a local worktree"
+  pass "cloud records expose their recorded remote context without a local worktree"
+}
+
 # --- remote secondmate arm ---------------------------------------------------
 # A meta recording remote_host= must never be read through the local worktree
 # probe or a local backend adapter: the recorded worktree and pane live on the
@@ -2571,6 +2592,7 @@ test_dead_window_still_reports_active_run_step
 test_no_timeout_uses_perl_bound
 test_scout_skips_run_lookup
 test_torn_down_worktree
+test_cloud_record_uses_cloud_state_without_local_worktree
 test_remote_alive_with_log_uses_status_log
 test_remote_alive_idle_is_healthy_not_gone
 test_remote_unreachable_is_unknown_remote_not_dead

@@ -15,11 +15,13 @@
 # fixed mapping logic, no heuristics and no LLM. Output is one stable, parseable,
 # token-tight line firstmate can read every heartbeat:
 #
-#   state: <working|parked|done|blocked|paused|failed|unknown> · source: <run-step|pane|status-log|remote-endpoint|none> · <detail>
+#   state: <working|parked|done|blocked|paused|failed|unknown> · source: <run-step|pane|status-log|cloud|remote-endpoint|none> · <detail>
 #
 # Logic, in order:
-#   1. Resolve worktree + backend target + kind from state/<id>.meta. A meta
-#      recording remote_host= is a remote secondmate: its worktree and endpoint
+#   1. Resolve worktree + backend target + kind from state/<id>.meta. A
+#      kind=cloud record reports its tracked RemoteTrigger/session context
+#      without local worktree or endpoint reads. A meta recording remote_host=
+#      is a remote secondmate: its worktree and endpoint
 #      live on that host, so the local worktree and pane reads are skipped and
 #      the remote host is asked for the endpoint's recovery-grade state
 #      (fm-on.sh + fm-remote-secondmate-control.sh state). alive falls through
@@ -75,7 +77,7 @@
 #      running/fixing with recent reported activity: a killed or timed-out drive
 #      call is not daemon death, so that claim is answered by steering the crew
 #      to reattach, not by escalating.
-#   4. No run for this crew (pre-validation, or kind=scout): fall back to the
+#   4. Remaining no-run tasks (pre-validation, or kind=scout): fall back to the
 #      recorded backend's pane busy state, then the status log's last line only
 #      when its verb maps to a recognized run-state. Decision-only events such as
 #      `resolved` never become current state or detail.
@@ -152,6 +154,16 @@ REMOTE_HOST=$(meta_value remote_host)
 [ -n "$KIND" ] || KIND=ship
 PIPELINE_CMD=no-mistakes
 [ "$MODE" = no-mistakes-slim ] && PIPELINE_CMD=no-mistakes-slim
+
+if [ "$KIND" = cloud ]; then
+  CLOUD_REPO=$(meta_value repo)
+  CLOUD_TRIGGER=$(meta_value trigger_id)
+  CLOUD_SESSION=$(meta_value session_id)
+  CLOUD_DETAIL="repo=$CLOUD_REPO"
+  [ -z "$CLOUD_TRIGGER" ] || CLOUD_DETAIL="$CLOUD_DETAIL trigger_id=$CLOUD_TRIGGER"
+  [ -z "$CLOUD_SESSION" ] || CLOUD_DETAIL="$CLOUD_DETAIL session_id=$CLOUD_SESSION"
+  emit working cloud "$CLOUD_DETAIL"
+fi
 
 # A torn-down (or never-created) worktree has no current state to read. A
 # remote secondmate's recorded worktree is a path on ITS host, so the local
